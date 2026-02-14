@@ -82,3 +82,6 @@ images:
 
 substitutions:
   _NEXT_PUBLIC_API_URL: 'https://api.forcesports.in'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
