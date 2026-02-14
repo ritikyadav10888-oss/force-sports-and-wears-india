@@ -1,0 +1,84 @@
+steps:
+  # 1. Build API (Backend)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-api', '-f', 'packages/api/Dockerfile', '.']
+    id: 'api-build'
+    waitFor: ['-']
+
+  # 2. Build Storefront (Frontend)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-storefront'
+      - '-f'
+      - 'Dockerfile.storefront'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL'
+      - '.'
+    id: 'storefront-build'
+    waitFor: ['-']
+
+  # 3. Build Admin Panel
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
+      - '-f'
+      - 'packages/admin/Dockerfile'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL'
+      - '.'
+    id: 'admin-build'
+    waitFor: ['-']
+
+  # 4. Deploy API
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'force-api'
+      - '--image'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-api'
+      - '--region'
+      - 'asia-south1'
+    id: 'api-deploy'
+    waitFor: ['api-build']
+
+  # 5. Deploy Storefront
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'force-storefront'
+      - '--image'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-storefront'
+      - '--region'
+      - 'asia-south1'
+    id: 'storefront-deploy'
+    waitFor: ['storefront-build']
+
+  # 6. Deploy Admin
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'force-admin'
+      - '--image'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
+      - '--region'
+      - 'asia-south1'
+    id: 'admin-deploy'
+    waitFor: ['admin-build']
+
+images:
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-api'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-storefront'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
+
+substitutions:
+  _NEXT_PUBLIC_API_URL: 'https://api.forcesports.in'

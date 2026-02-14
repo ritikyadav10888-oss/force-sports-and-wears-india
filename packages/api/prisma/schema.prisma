@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String         // bcrypt hashed
+  role          Role           @default(CUSTOMER)
+  name          String
+  phone         String?
+  loginAttempts Int            @default(0)
+  lockoutUntil  DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  refreshTokens RefreshToken[]
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+  
+  @@index([userId])
+  @@index([token])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String?
+  action       String   // 'LOGIN', 'LOGOUT', 'CREATE_ORDER', etc.
+  resource     String   // 'User', 'Order', 'Product', etc.
+  resourceId   String?
+  ipAddress    String
+  userAgent    String
+  changes      String?  // JSON string of before/after data
+  status       String   // 'SUCCESS', 'FAILURE'
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  price       Decimal     @db.Decimal(10, 2)
+  images      String[]
+  category    String
+  stock       Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  status        OrderStatus @default(PENDING)
+  total         Decimal     @db.Decimal(10, 2)
+  subtotal      Decimal     @db.Decimal(10, 2)
+  shipping      Decimal     @db.Decimal(10, 2)
+  paymentMethod String
+  paymentStatus String      @default("pending")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         OrderItem[]
+  shipment      Shipment?
+  shippingAddress ShippingAddress?
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+}
+
+model ShippingAddress {
+  id        String @id @default(uuid())
+  orderId   String @unique
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name      String
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  phone     String
+}
+
+model Shipment {
+  id             String   @id @default(uuid())
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  trackingNumber String   @unique
+  carrier        String
+  status         String
+  estimatedDate  DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

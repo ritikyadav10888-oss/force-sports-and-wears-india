@@ -1,0 +1,37 @@
+# .gcloudignore
+#
+# This file specifies which files should be excluded from being uploaded to 
+# Google Cloud Build when running `gcloud builds submit`.
+
+# Git files
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js build artifacts
+.next/
+out/
+packages/admin/.next/
+packages/admin/out/
+
+# Env files
+.env
+.env.local
+.env.production
+.env.*.local
+packages/api/.env
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Misc
+.DS_Store
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
