@@ -22,6 +22,9 @@ model User {
   lastLoginAt   DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  isVerified    Boolean        @default(false)
+  otp           String?
+  otpExpiresAt  DateTime?
   orders        Order[]
   refreshTokens RefreshToken[]
 }

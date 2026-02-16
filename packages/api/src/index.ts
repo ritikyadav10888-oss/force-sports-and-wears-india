@@ -1,17 +1,19 @@
+import path from 'path';
+import 'dotenv/config'; // Load env vars before any other imports
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import productRoutes from './routes/product.routes';
 import orderRoutes from './routes/order.routes';
 import customerRoutes from './routes/customer.routes';
 import shipmentRoutes from './routes/shipment.routes';
+import uploadRoutes from './routes/upload'; // Import upload routes
 import { errorHandler } from './middleware/errorHandler';
 import { generalLimiter, authLimiter, adminLimiter } from './middleware/rateLimiter';
 import { validateApiSecret } from './middleware/apiSecret';
 
-dotenv.config();
+// dotenv.config() is now handled by the import above
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,22 +23,7 @@ app.set('trust proxy', 1);
 
 // Security: CORS configuration with origin validation
 app.use(cors({
-    origin: (origin, callback) => {
-        const allowedOrigins = process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) || [
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'http://localhost:3002'
-        ];
-
-        // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: true, // Allow ALL origins temporarily to debug production access
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Secret'],
@@ -58,6 +45,10 @@ app.use('/api/orders', orderRoutes);
 // Admin routes: Require API secret + higher rate limit
 app.use('/api/customers', validateApiSecret, adminLimiter, customerRoutes);
 app.use('/api/shipments', validateApiSecret, adminLimiter, shipmentRoutes);
+app.use('/api/upload', uploadRoutes);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 // Health check (no rate limit)
 app.get('/health', (req, res) => {

@@ -54,7 +54,7 @@ export const Navbar = () => {
                         <>
                             <Link href="/signup" className="hover:text-foreground/60 transition-colors">Sign Up</Link>
                             <span className="text-border">|</span>
-                            <button onClick={() => setLoginModalOpen(true)} className="hover:text-foreground/60 transition-colors">Login</button>
+                            <button onClick={() => setLoginModalOpen(true)} className="hover:text-foreground/60 transition-colors">Log In</button>
                         </>
                     )}
                 </div>

@@ -67,20 +67,9 @@ export default function SignupPage() {
             });
 
 
-            // Auto login after signup
-            setAuthLogin(
-                formData.phone,
-                'IN',
-                '+91',
-                {
-                    firstName: formData.name.split(' ')[0],
-                    lastName: formData.name.split(' ').slice(1).join(' '),
-                    email: formData.email,
-                    address: formData.address
-                }
-            );
-
-            router.push('/');
+            // Redirect to OTP verification with OTP code in URL (Dev only safety provided by API)
+            const otpParam = response.user.otp ? `&otp=${response.user.otp}` : '';
+            router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}${otpParam}`);
         } catch (err: any) {
             setError(err.message || "Registration failed. This account may already exist.");
             setLoading(false);
@@ -117,8 +106,8 @@ export default function SignupPage() {
 
                     <div className="flex justify-between items-center mb-12">
                         <div>
-                            <h2 className="text-4xl font-black italic tracking-tighter uppercase mb-2">Join Force</h2>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Protocol Step {step} of 2</p>
+                            <h2 className="text-4xl font-black italic tracking-tighter uppercase mb-2">Create Account</h2>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Step {step} of 2</p>
                         </div>
                         <div className="flex gap-2">
                             <div className={`w-12 h-1.5 rounded-full ${step >= 1 ? 'bg-accent' : 'bg-secondary'}`} />
@@ -156,14 +145,14 @@ export default function SignupPage() {
                                                 name="name"
                                                 value={formData.name}
                                                 onChange={handleInputChange}
-                                                placeholder="ELITE ATHLETE"
+                                                placeholder="John Doe"
                                                 className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm uppercase"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Email Protocol</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Email Address</label>
                                         <div className="relative group">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
                                             <input
@@ -172,14 +161,14 @@ export default function SignupPage() {
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleInputChange}
-                                                placeholder="ATHLETE@FORCESPORTS.COM"
+                                                placeholder="john@example.com"
                                                 className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm uppercase"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Mobile Terminal</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Phone Number</label>
                                         <div className="relative group">
                                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
                                             <input
@@ -195,7 +184,7 @@ export default function SignupPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Secure Password</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Password</label>
                                         <div className="relative group">
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
                                             <input
@@ -228,7 +217,7 @@ export default function SignupPage() {
                                                 name="address.street"
                                                 value={formData.address.street}
                                                 onChange={handleInputChange}
-                                                placeholder="123 ELITE BOULEVARD"
+                                                placeholder="123 Main St"
                                                 className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm uppercase"
                                             />
                                         </div>
@@ -283,7 +272,7 @@ export default function SignupPage() {
                                     <Loader2 className="animate-spin" size={20} />
                                 ) : (
                                     <>
-                                        {step === 1 ? "Next Protocol" : "Complete Induction"}
+                                        {step === 1 ? "Next" : "Sign Up"}
                                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                     </>
                                 )}
@@ -298,9 +287,9 @@ export default function SignupPage() {
 
                 <div className="text-center mt-10">
                     <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                        Returning member?{" "}
+                        Already have an account?{" "}
                         <Link href="/login" className="text-accent hover:underline decoration-2 ml-2 transition-colors">
-                            Authenticate Entry
+                            Log In
                         </Link>
                     </p>
                 </div>

@@ -20,7 +20,8 @@ export const getAllProducts = async (req: AuthRequest, res: Response) => {
         });
         res.json({ products });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch products' });
+        console.error('Error fetching products:', error);
+        res.status(500).json({ error: 'Failed to fetch products', details: String(error) });
     }
 };
 

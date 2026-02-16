@@ -24,7 +24,9 @@ export const FeaturedSection = () => {
         fetchFeatured();
     }, []);
 
-    const featuredProducts = products.length > 0 ? products.slice(0, 4) : [];
+    const featuredProducts = products.length > 0
+        ? [...products].sort((a, b) => (a.category?.toLowerCase() === 'cricket' ? -1 : 1)).slice(0, 4)
+        : [];
 
     return (
         <section className="py-32 px-6">

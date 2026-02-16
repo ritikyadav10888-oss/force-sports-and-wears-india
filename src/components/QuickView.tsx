@@ -86,7 +86,7 @@ export const QuickView = ({ product, isOpen, onClose }: QuickViewProps) => {
                                 <p className="text-muted-foreground font-medium text-lg leading-relaxed">{product.description}</p>
 
                                 <ul className="space-y-2 pt-4">
-                                    {product.highlights.slice(0, 3).map((highlight, i) => (
+                                    {(product.highlights || []).slice(0, 3).map((highlight, i) => (
                                         <li key={i} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-foreground/60">
                                             <div className="w-1 h-1 rounded-full bg-accent" />
                                             {highlight}

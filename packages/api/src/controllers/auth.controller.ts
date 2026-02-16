@@ -68,6 +68,10 @@ export const register = async (req: AuthRequest, res: Response) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
         // Create user
         const user = await prisma.user.create({
             data: {
@@ -75,33 +79,28 @@ export const register = async (req: AuthRequest, res: Response) => {
                 password: hashedPassword,
                 name,
                 phone,
-                role: 'CUSTOMER'
+                role: 'CUSTOMER',
+                isVerified: false,
+                otp,
+                otpExpiresAt
             }
         });
 
-        // Generate token
-        const token = generateToken({
-            userId: user.id,
-            email: user.email,
-            role: user.role
-        });
+        // SIMULATE SENDING OTP (Log to console)
+        console.log(`[OTP] Generated for ${email}: ${otp}`);
 
-        // Set cookie
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-        });
-
+        // Return success but NO token (user must verify)
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'User registered successfully. Please verify OTP sent to your email.',
             user: {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                role: user.role
-            },
-            token
+                role: user.role,
+                isVerified: false,
+                phone: user.phone,
+                otp: process.env.NODE_ENV === 'development' ? otp : undefined // For testing convenience
+            }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -109,6 +108,75 @@ export const register = async (req: AuthRequest, res: Response) => {
         }
         console.error('Registration error:', error);
         res.status(500).json({ error: 'Registration failed' });
+    }
+};
+
+export const verifyOtp = async (req: AuthRequest, res: Response) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ error: 'Email and OTP are required' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ error: 'User already verified' });
+        }
+
+        if (user.otp !== otp) {
+            return res.status(400).json({ error: 'Invalid OTP' });
+        }
+
+        if (user.otpExpiresAt && user.otpExpiresAt < new Date()) {
+            return res.status(400).json({ error: 'OTP expired' });
+        }
+
+        // Mark verified
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                isVerified: true,
+                otp: null,
+                otpExpiresAt: null
+            }
+        });
+
+        // Generate token
+        const token = generateToken({
+            userId: updatedUser.id,
+            email: updatedUser.email,
+            role: updatedUser.role
+        });
+
+        // Set cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+            message: 'Email verified successfully',
+            user: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                name: updatedUser.name,
+                role: updatedUser.role,
+                isVerified: true,
+                phone: updatedUser.phone
+            },
+            token
+        });
+
+    } catch (error) {
+        console.error('OTP Verification error:', error);
+        res.status(500).json({ error: 'Verification failed' });
     }
 };
 
@@ -166,6 +234,11 @@ export const login = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
+        // Check verification (Excluding Hardcoded Admin)
+        if (!user.isVerified && user.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Email not verified. Please verify your email.' });
+        }
+
         // Verify password
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
@@ -192,7 +265,9 @@ export const login = async (req: AuthRequest, res: Response) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                role: user.role
+                role: user.role,
+                isVerified: user.isVerified,
+                phone: user.phone
             },
             token
         });

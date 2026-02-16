@@ -216,6 +216,24 @@ class AdminAPIClient {
         if (!res.ok) throw new Error('Failed to update shipment status');
         return res.json();
     }
+
+    // Uploads
+    async uploadImage(file: File) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        const res = await fetch(`${API_URL}/api/upload`, {
+            method: 'POST',
+            body: formData,
+            // Browser sets content-type to multipart/form-data automatically
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to upload image');
+        }
+        return res.json();
+    }
 }
 
 export const adminAPI = new AdminAPIClient();

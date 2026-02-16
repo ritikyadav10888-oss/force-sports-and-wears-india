@@ -41,8 +41,10 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                 }
             );
 
+            // Close modal and redirect to account
             onClose();
-            router.refresh();
+            // Force a hard navigation to ensure state is fresh
+            window.location.href = '/account';
         } catch (err: any) {
             setError(err.message || "Invalid credentials. Please try again.");
         } finally {
@@ -96,10 +98,10 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                             {/* Title */}
                             <div className="text-center mb-10">
                                 <h2 className="text-3xl font-black italic tracking-tighter uppercase mb-2 leading-none">
-                                    Member Login
+                                    Welcome Back
                                 </h2>
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                                    Access your elite athlete profile
+                                    Log in to your account
                                 </p>
                             </div>
 
@@ -110,6 +112,17 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                                     className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 text-center"
                                 >
                                     {error}
+                                    {error.includes("verify") && (
+                                        <div className="mt-2">
+                                            <Link
+                                                href={`/verify-otp?email=${encodeURIComponent(email)}`}
+                                                className="underline hover:text-red-400 transition-colors"
+                                                onClick={onClose}
+                                            >
+                                                Verify Now
+                                            </Link>
+                                        </div>
+                                    )}
                                 </motion.div>
                             )}
 
@@ -158,7 +171,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                                         <Loader2 className="animate-spin" size={18} />
                                     ) : (
                                         <>
-                                            Authorize <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                            Log In <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                                         </>
                                     )}
                                 </button>
@@ -169,7 +182,7 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                     Not a member yet?{" "}
                                     <Link href="/signup" className="text-accent hover:underline decoration-2 ml-2" onClick={onClose}>
-                                        Join The Force
+                                        Sign Up
                                     </Link>
                                 </p>
                             </div>

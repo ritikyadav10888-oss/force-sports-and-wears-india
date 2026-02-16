@@ -1,0 +1,58 @@
+{
+    "hosting": [
+        {
+            "site": "force-sports-india-store",
+            "public": "public",
+            "ignore": [
+                "firebase.json",
+                "**/.*",
+                "**/node_modules/**"
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "run": {
+                        "serviceId": "force-storefront",
+                        "region": "asia-south1"
+                    }
+                }
+            ]
+        },
+        {
+            "site": "force-sports-india-admin",
+            "public": "public",
+            "ignore": [
+                "firebase.json",
+                "**/.*",
+                "**/node_modules/**"
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "run": {
+                        "serviceId": "force-admin",
+                        "region": "asia-south1"
+                    }
+                }
+            ]
+        },
+        {
+            "site": "force-sports-india-api",
+            "public": "public",
+            "ignore": [
+                "firebase.json",
+                "**/.*",
+                "**/node_modules/**"
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "run": {
+                        "serviceId": "force-api",
+                        "region": "asia-south1"
+                    }
+                }
+            ]
+        }
+    ]
+}

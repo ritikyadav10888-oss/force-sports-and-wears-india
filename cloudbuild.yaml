@@ -81,7 +81,7 @@ images:
   - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
 
 substitutions:
-  _NEXT_PUBLIC_API_URL: 'https://api.forcesports.in'
+  _NEXT_PUBLIC_API_URL: 'https://api.forcesportsindia.com'
 
 options:
   logging: CLOUD_LOGGING_ONLY

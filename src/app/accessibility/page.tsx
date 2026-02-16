@@ -112,7 +112,7 @@ export default function AccessibilityPage() {
                             </div>
                             <div className="flex flex-col gap-4 w-full md:w-auto">
                                 <a
-                                    href="mailto:accessibility@forcesports.in"
+                                    href="mailto:accessibility@forcesportsindia.com"
                                     className="px-10 py-5 bg-accent text-white rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:scale-105 transition-all shadow-2xl active:scale-95 text-xs"
                                 >
                                     <Mail size={18} /> Contact Support

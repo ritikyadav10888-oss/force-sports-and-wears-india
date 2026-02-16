@@ -9,6 +9,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Force Sports & Wears India",
   description: "High-performance sports apparel and wear designed for the modern athlete in India.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 import { Footer } from "@/components/Footer";
