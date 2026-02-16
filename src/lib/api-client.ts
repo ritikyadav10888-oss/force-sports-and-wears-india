@@ -95,6 +95,39 @@ class APIClient {
         return res.json();
     }
 
+    // OTP Auth
+    async sendOtp(phone: string): Promise<void> {
+        const res = await fetch(`${API_URL}/api/auth/send-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone }),
+        });
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to send OTP');
+        }
+    }
+
+    async verifyOtp(phone: string, otp: string): Promise<LoginResponse> {
+        const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ phone, otp }),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Invalid OTP');
+        }
+
+        const response = await res.json();
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('token', response.token);
+        }
+        return response;
+    }
+
     // Products (Public)
     async getProducts() {
         const res = await fetch(`${API_URL}/api/products`, {

@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mail, Lock, ArrowRight, Loader2, Phone, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { api } from "@/lib/api-client";
@@ -12,8 +12,12 @@ import { useAuth } from "@/store/useAuth";
 export default function LoginPage() {
     const router = useRouter();
     const { login: setAuthLogin } = useAuth();
+
+    const [mode, setMode] = useState<'password' | 'otp'>('password');
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [phone, setPhone] = useState("");
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -23,24 +27,30 @@ export default function LoginPage() {
         setError("");
 
         try {
-            const response = await api.login(email, password);
-            // Sync with Zustand store
-            setAuthLogin(
-                response.user.phone || '',
-                'IN',
-                '+91',
-                {
-                    firstName: response.user.name?.split(' ')[0] || '',
-                    lastName: response.user.name?.split(' ').slice(1).join(' ') || '',
-                    email: response.user.email
-                }
-            );
-
-            router.push('/');
+            if (mode === 'password') {
+                const response = await api.login(email, password);
+                setAuthLogin(
+                    response.user.phone || '',
+                    'IN',
+                    '+91',
+                    {
+                        firstName: response.user.name?.split(' ')[0] || '',
+                        lastName: response.user.name?.split(' ').slice(1).join(' ') || '',
+                        email: response.user.email
+                    }
+                );
+                router.push('/');
+            } else {
+                // Send OTP
+                await api.sendOtp(phone);
+                router.push(`/verify-otp?phone=${encodeURIComponent(phone)}`);
+            }
         } catch (err: any) {
-            setError(err.message || "Invalid credentials. Please try again.");
-        } finally {
+            setError(err.message || "Authentication failed. Please try again.");
             setLoading(false);
+        } finally {
+            if (mode === 'password') setLoading(false);
+            // For OTP mode, we redirect, so loading state persists visually until nav
         }
     };
 
@@ -94,54 +104,100 @@ export default function LoginPage() {
                     )}
 
                     <form onSubmit={handleLogin} className="space-y-6">
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Email Address</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="athlete@forcesports.com"
-                                    className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm"
-                                    required
-                                />
-                            </div>
-                        </div>
+                        <AnimatePresence mode="wait">
+                            {mode === 'password' ? (
+                                <motion.div
+                                    key="password-mode"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 20 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Email Address</label>
+                                        <div className="relative group">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="athlete@forcesports.com"
+                                                className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center ml-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</label>
-                                <button type="button" className="text-[9px] font-black tracking-widest text-accent uppercase hover:underline">Forgot?</button>
-                            </div>
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm"
-                                    required
-                                />
-                            </div>
-                        </div>
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center ml-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</label>
+                                            <button type="button" className="text-[9px] font-black tracking-widest text-accent uppercase hover:underline">Forgot?</button>
+                                        </div>
+                                        <div className="relative group">
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
+                                            <input
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="••••••••"
+                                                className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="otp-mode"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Mobile Number</label>
+                                        <div className="relative group">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-accent transition-colors" size={18} />
+                                            <input
+                                                type="tel"
+                                                value={phone}
+                                                onChange={(e) => setPhone(e.target.value)}
+                                                placeholder="9876543210"
+                                                className="w-full pl-12 pr-6 py-5 bg-secondary/50 border border-border rounded-2xl outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all font-bold text-sm"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Login Button */}
                         <button
                             type="submit"
-                            disabled={loading || !email || !password}
+                            disabled={loading}
                             className="w-full mt-6 bg-foreground text-background py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:scale-[1.02] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 group shadow-xl active:scale-[0.98]"
                         >
                             {loading ? (
                                 <Loader2 className="animate-spin" size={20} />
                             ) : (
                                 <>
-                                    Authorize Entry <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                    {mode === 'password' ? 'Authorize Entry' : 'Send Verification Code'}
+                                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
+
+                    <div className="mt-8 text-center">
+                         <button
+                            type="button"
+                            onClick={() => setMode(mode === 'password' ? 'otp' : 'password')}
+                            className="text-[10px] font-black uppercase tracking-widest text-accent hover:underline decoration-2"
+                         >
+                            {mode === 'password' ? 'Login via Mobile OTP' : 'Login via Email/Password'}
+                         </button>
+                    </div>
 
                     {/* Signup Link */}
                     <div className="mt-12 pt-10 border-t border-border/50 text-center">
