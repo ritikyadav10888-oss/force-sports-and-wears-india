@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
@@ -18,6 +19,9 @@ const PORT = process.env.PORT || 5000;
 
 // Security: Trust proxy for accurate IP addresses behind reverse proxies
 app.set('trust proxy', 1);
+
+// Security: Set security headers
+app.use(helmet());
 
 // Security: CORS configuration with origin validation
 app.use(cors({

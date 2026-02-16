@@ -33,6 +33,42 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ error: 'User not authenticated' });
         }
 
+        // Fetch products to verify prices and stock
+        const productIds = data.items.map(i => i.productId);
+        const products = await prisma.product.findMany({
+            where: { id: { in: productIds } }
+        });
+
+        if (products.length !== new Set(productIds).size) {
+            return res.status(400).json({ error: 'One or more products not found' });
+        }
+
+        let calculatedSubtotal = 0;
+        const orderItemsData = [];
+
+        for (const item of data.items) {
+            const product = products.find(p => p.id === item.productId);
+            if (!product) {
+                 return res.status(400).json({ error: `Product ${item.productId} not found` });
+            }
+
+            if (product.stock < item.quantity) {
+                return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
+            }
+
+            const price = Number(product.price);
+            calculatedSubtotal += price * item.quantity;
+
+            orderItemsData.push({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: price
+            });
+        }
+
+        const shipping = Number(data.shipping);
+        const total = calculatedSubtotal + shipping;
+
         // Generate order number
         const orderNumber = `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
@@ -41,15 +77,15 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
                 orderNumber,
                 userId,
                 status: 'PENDING',
-                subtotal: data.subtotal.toString(),
-                shipping: data.shipping.toString(),
-                total: data.total.toString(),
+                subtotal: calculatedSubtotal.toString(),
+                shipping: shipping.toString(),
+                total: total.toString(),
                 paymentMethod: data.paymentMethod,
                 items: {
-                    create: data.items.map(item => ({
+                    create: orderItemsData.map(item => ({
                         productId: item.productId,
                         quantity: item.quantity,
-                        price: item.price.toString()
+                        price: item.price
                     }))
                 },
                 shippingAddress: {
@@ -69,6 +105,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
+        console.error('Create order error:', error);
         res.status(500).json({ error: 'Failed to create order' });
     }
 };
