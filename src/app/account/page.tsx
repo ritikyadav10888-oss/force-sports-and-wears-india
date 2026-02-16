@@ -78,7 +78,7 @@ export default function AccountPage() {
         // Simple auth check
         if (!isAuthenticated) {
             const timer = setTimeout(() => {
-                if (!isAuthenticated) router.push('/');
+                if (!isAuthenticated) router.push('/?login=true');
             }, 3000); // Wait 3 seconds to allow hydration/fetch
             return () => clearTimeout(timer);
         }

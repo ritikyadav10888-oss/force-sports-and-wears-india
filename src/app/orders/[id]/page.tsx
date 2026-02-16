@@ -41,7 +41,7 @@ export default function OrderDetailsPage() {
             // Wait slightly for auth check, though middleware might handle it?
             // Client-side fallback
             const timer = setTimeout(() => {
-                if (!isAuthenticated) router.push('/login');
+                if (!isAuthenticated) router.push('/?login=true');
             }, 2000);
             return () => clearTimeout(timer);
         }

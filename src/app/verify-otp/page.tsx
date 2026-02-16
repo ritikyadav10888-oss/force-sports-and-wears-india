@@ -30,7 +30,7 @@ export default function VerifyOTPPage() {
 
     useEffect(() => {
         if (!email) {
-            router.push('/login');
+            router.push('/?login=true');
         }
 
         // Focus first input

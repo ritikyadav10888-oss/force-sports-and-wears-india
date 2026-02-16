@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ShoppingBag, Search, Menu, X, User, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,18 @@ export const Navbar = () => {
     const { detectCurrency } = useCurrency();
     const { items, toggleCart } = useCart();
     const { user, isAuthenticated, logout } = useAuth();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (searchParams.get('login') === 'true') {
+            setLoginModalOpen(true);
+            // Optional: Clean up URL after opening modal
+            // const newParams = new URLSearchParams(searchParams.toString());
+            // newParams.delete('login');
+            // router.replace(`?${newParams.toString()}`, { scroll: false });
+        }
+    }, [searchParams]);
 
     const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
