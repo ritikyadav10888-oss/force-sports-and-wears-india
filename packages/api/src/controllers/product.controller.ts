@@ -10,7 +10,10 @@ const createProductSchema = z.object({
     price: z.number().positive(),
     images: z.array(z.string()),
     category: z.string(),
-    stock: z.number().int().nonnegative()
+    stock: z.number().int().nonnegative(),
+    sizes: z.array(z.string()).optional(),
+    returnPolicy: z.enum(['RETURNABLE', 'EXCHANGE_ONLY', 'NON_RETURNABLE']).optional(),
+    deliveryDays: z.number().int().positive().optional()
 });
 
 export const getAllProducts = async (req: AuthRequest, res: Response) => {

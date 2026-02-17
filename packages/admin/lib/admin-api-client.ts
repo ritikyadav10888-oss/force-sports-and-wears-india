@@ -21,200 +21,140 @@ class AdminAPIClient {
         };
     }
 
-    // Auth
-    async login(email: string, password: string): Promise<LoginResponse> {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+    private async request(url: string, options: RequestInit = {}) {
+        const res = await fetch(`${API_URL}${url}`, {
+            ...options,
+            headers: {
+                ...this.getHeaders(),
+                ...options.headers,
+            },
             credentials: 'include',
-            body: JSON.stringify({ email, password }),
         });
 
-        if (!res.ok) throw new Error('Login failed');
-        const data = await res.json();
-
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('admin_token', data.token);
+        if (res.status === 401 || res.status === 403) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('admin_token');
+                window.location.href = '/login';
+            }
+            throw new Error('Authentication failed');
         }
 
-        return data;
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({}));
+            throw new Error(error.error || error.message || 'API Request Failed');
+        }
+
+        return res.json();
+    }
+
+    // Auth
+    async login(email: string, password: string): Promise<LoginResponse> {
+        return this.request('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password }),
+        }).then(data => {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('admin_token', data.token);
+            }
+            return data;
+        });
     }
 
     async logout(): Promise<void> {
-        await fetch(`${API_URL}/api/auth/logout`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('admin_token');
+        try {
+            await this.request('/api/auth/logout', { method: 'POST' });
+        } finally {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('admin_token');
+            }
         }
     }
 
     async getMe() {
-        const res = await fetch(`${API_URL}/api/auth/me`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Not authenticated');
-        return res.json();
+        return this.request('/api/auth/me');
     }
 
     // Customers
     async getCustomers() {
-        const res = await fetch(`${API_URL}/api/customers`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch customers');
-        return res.json();
+        return this.request('/api/customers');
     }
 
     async getCustomer(id: string) {
-        const res = await fetch(`${API_URL}/api/customers/${id}`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch customer');
-        return res.json();
+        return this.request(`/api/customers/${id}`);
     }
 
     // Orders
     async getOrders() {
-        const res = await fetch(`${API_URL}/api/orders`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch orders');
-        return res.json();
+        return this.request('/api/orders');
     }
 
     async getOrder(id: string) {
-        const res = await fetch(`${API_URL}/api/orders/${id}`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch order');
-        return res.json();
+        return this.request(`/api/orders/${id}`);
     }
 
     async updateOrderStatus(id: string, status: string) {
-        const res = await fetch(`${API_URL}/api/orders/${id}/status`, {
+        return this.request(`/api/orders/${id}/status`, {
             method: 'PUT',
-            headers: this.getHeaders(),
-            credentials: 'include',
             body: JSON.stringify({ status }),
         });
-
-        if (!res.ok) throw new Error('Failed to update order status');
-        return res.json();
     }
 
     // Products
     async getProducts() {
-        const res = await fetch(`${API_URL}/api/products`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch products');
-        return res.json();
+        return this.request('/api/products');
     }
 
     async getProduct(id: string) {
-        const res = await fetch(`${API_URL}/api/products/${id}`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch product');
-        return res.json();
+        return this.request(`/api/products/${id}`);
     }
 
     async createProduct(data: any) {
-        const res = await fetch(`${API_URL}/api/products`, {
+        return this.request('/api/products', {
             method: 'POST',
-            headers: this.getHeaders(),
-            credentials: 'include',
             body: JSON.stringify(data),
         });
-
-        if (!res.ok) throw new Error('Failed to create product');
-        return res.json();
     }
 
     async updateProduct(id: string, data: any) {
-        const res = await fetch(`${API_URL}/api/products/${id}`, {
+        return this.request(`/api/products/${id}`, {
             method: 'PUT',
-            headers: this.getHeaders(),
-            credentials: 'include',
             body: JSON.stringify(data),
         });
-
-        if (!res.ok) throw new Error('Failed to update product');
-        return res.json();
     }
 
     async deleteProduct(id: string) {
-        const res = await fetch(`${API_URL}/api/products/${id}`, {
+        return this.request(`/api/products/${id}`, {
             method: 'DELETE',
-            headers: this.getHeaders(),
-            credentials: 'include',
         });
-
-        if (!res.ok) throw new Error('Failed to delete product');
-        return res.json();
     }
 
     // Shipments
     async getShipments() {
-        const res = await fetch(`${API_URL}/api/shipments`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch shipments');
-        return res.json();
+        return this.request('/api/shipments');
     }
 
     async getShipment(id: string) {
-        const res = await fetch(`${API_URL}/api/shipments/${id}`, {
-            headers: this.getHeaders(),
-            credentials: 'include',
-        });
-
-        if (!res.ok) throw new Error('Failed to fetch shipment');
-        return res.json();
+        return this.request(`/api/shipments/${id}`);
     }
 
     async createShipment(data: any) {
-        const res = await fetch(`${API_URL}/api/shipments`, {
+        return this.request('/api/shipments', {
             method: 'POST',
-            headers: this.getHeaders(),
-            credentials: 'include',
             body: JSON.stringify(data),
         });
-
-        if (!res.ok) throw new Error('Failed to create shipment');
-        return res.json();
     }
 
     async updateShipmentStatus(id: string, status: string) {
-        const res = await fetch(`${API_URL}/api/shipments/${id}/status`, {
+        return this.request(`/api/shipments/${id}/status`, {
             method: 'PUT',
-            headers: this.getHeaders(),
-            credentials: 'include',
             body: JSON.stringify({ status }),
         });
+    }
 
-        if (!res.ok) throw new Error('Failed to update shipment status');
-        return res.json();
+    async deleteShipment(id: string) {
+        return this.request(`/api/shipments/${id}`, {
+            method: 'DELETE',
+        });
     }
 
     // Uploads
@@ -224,13 +164,25 @@ class AdminAPIClient {
 
         const res = await fetch(`${API_URL}/api/upload`, {
             method: 'POST',
+            headers: {
+                // Determine Authorization header manually since generic request handles JSON
+                'Authorization': typeof window !== 'undefined' ? `Bearer ${localStorage.getItem('admin_token')}` : '',
+                'X-API-Secret': API_SECRET || '',
+            },
             body: formData,
-            // Browser sets content-type to multipart/form-data automatically
         });
 
+        if (res.status === 401 || res.status === 403) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('admin_token');
+                window.location.href = '/login';
+            }
+            throw new Error('Authentication failed');
+        }
+
         if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.error || 'Failed to upload image');
+            const error = await res.json().catch(() => ({}));
+            throw new Error(error.error || 'Failed to upload image');
         }
         return res.json();
     }

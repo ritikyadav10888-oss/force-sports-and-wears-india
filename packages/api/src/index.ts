@@ -61,6 +61,7 @@ app.get('/health', (req, res) => {
 });
 
 // Security check endpoint
+// Restart trigger
 app.get('/api/security-check', (req, res) => {
     res.json({
         apiSecretConfigured: !!process.env.API_SECRET,
@@ -85,3 +86,5 @@ app.listen(Number(PORT), '0.0.0.0', () => {
 
 
 export default app;
+
+// Restart trigger: 403 fix verification

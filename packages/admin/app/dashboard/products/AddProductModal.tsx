@@ -19,7 +19,10 @@ export const AddProductModal = ({ isOpen, onClose, onSuccess, product }: AddProd
         description: '',
         price: '',
         category: '',
-        stock: ''
+        stock: '',
+        sizes: '',
+        returnPolicy: 'RETURNABLE',
+        deliveryDays: '7'
     });
     const [imageUrls, setImageUrls] = useState<string[]>(['']);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,11 +35,17 @@ export const AddProductModal = ({ isOpen, onClose, onSuccess, product }: AddProd
                     description: product.description || '',
                     price: product.price || '',
                     category: product.category || '',
-                    stock: product.stock || ''
+                    stock: product.stock || '',
+                    sizes: product.sizes ? product.sizes.join(', ') : '',
+                    returnPolicy: product.returnPolicy || 'RETURNABLE',
+                    deliveryDays: product.deliveryDays || '7'
                 });
                 setImageUrls(product.images && product.images.length > 0 ? product.images : ['']);
             } else {
-                setFormData({ name: '', description: '', price: '', category: '', stock: '' });
+                setFormData({
+                    name: '', description: '', price: '', category: '', stock: '',
+                    sizes: '', returnPolicy: 'RETURNABLE', deliveryDays: '7'
+                });
                 setImageUrls(['']);
             }
             setError('');
@@ -93,10 +102,15 @@ export const AddProductModal = ({ isOpen, onClose, onSuccess, product }: AddProd
 
         try {
             const payload = {
-                ...formData,
+                name: formData.name,
+                description: formData.description,
+                category: formData.category,
                 price: parseFloat(formData.price),
                 stock: parseInt(formData.stock),
-                images: validImages
+                images: validImages,
+                sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(s => s) : [],
+                returnPolicy: formData.returnPolicy,
+                deliveryDays: parseInt(formData.deliveryDays)
             };
 
             if (product?.id) {
@@ -197,7 +211,51 @@ export const AddProductModal = ({ isOpen, onClose, onSuccess, product }: AddProd
                                 <option value="Football" />
                                 <option value="Training" />
                                 <option value="Pickleball" />
+                                <option value="T-Shirts" />
+                                <option value="Hoodies" />
+                                <option value="Pants" />
                             </datalist>
+                        </div>
+
+                        {/* Sizes - Only for Wearables */}
+                        {['T-Shirts', 'Hoodies', 'Pants', 'Tracksuits'].some(c => formData.category.includes(c)) && (
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sizes (Comma Separated)</label>
+                                <input
+                                    type="text"
+                                    value={formData.sizes}
+                                    onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
+                                    className="w-full p-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-accent/50 outline-none font-medium"
+                                    placeholder="S, M, L, XL, XXL..."
+                                />
+                                <p className="text-[10px] text-muted-foreground">Available: S, M, L, XL, XXL, XXXL</p>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Return Policy</label>
+                                <select
+                                    value={formData.returnPolicy}
+                                    onChange={(e) => setFormData({ ...formData, returnPolicy: e.target.value })}
+                                    className="w-full p-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-accent/50 outline-none font-medium"
+                                >
+                                    <option value="RETURNABLE">Returns & Exchange</option>
+                                    <option value="EXCHANGE_ONLY">Exchange Only</option>
+                                    <option value="NON_RETURNABLE">Non-returnable</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Delivery Days (Est.)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={formData.deliveryDays}
+                                    onChange={(e) => setFormData({ ...formData, deliveryDays: e.target.value })}
+                                    className="w-full p-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-accent/50 outline-none font-medium"
+                                    placeholder="7"
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">

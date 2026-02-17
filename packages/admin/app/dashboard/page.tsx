@@ -70,7 +70,7 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-full">
                         <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">Internal Network Active</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">System Online</span>
                     </div>
                     <h1 className="text-6xl md:text-7xl font-black italic tracking-tighter uppercase leading-none gradient-text">
                         Dashboard
@@ -78,18 +78,15 @@ export default function DashboardPage() {
                     <p className="text-muted-foreground font-bold uppercase tracking-[0.2em] text-xs flex items-center gap-3">
                         <span>Force Sports Admin</span>
                         <span className="w-1 h-1 bg-muted-foreground/30 rounded-full" />
-                        <span className="text-accent underline underline-offset-4 decoration-2">Control Center</span>
+                        <span className="text-accent underline underline-offset-4 decoration-2">Administration</span>
                     </p>
                 </div>
 
                 <div className="flex items-center gap-4">
                     <div className="hidden lg:flex flex-col items-end">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Current Session</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Today</span>
                         <span className="text-sm font-bold">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                     </div>
-                    <button className="p-4 bg-white shadow-xl shadow-black/5 rounded-2xl border border-border/50 hover:scale-105 transition-transform">
-                        <Calendar size={20} className="text-accent" />
-                    </button>
                 </div>
             </div>
 
@@ -103,21 +100,21 @@ export default function DashboardPage() {
                     color="green"
                 />
                 <StatsCard
-                    title="Gross Orders"
+                    title="Total Orders"
                     value={stats.orders}
                     icon={ShoppingBag}
-                    trend={{ value: "Total", isPositive: true }}
+                    trend={{ value: "All Time", isPositive: true }}
                     color="blue"
                 />
                 <StatsCard
-                    title="Residents"
+                    title="Customers"
                     value={stats.customers}
                     icon={Users}
                     trend={{ value: "Active", isPositive: true }}
                     color="purple"
                 />
                 <StatsCard
-                    title="SKU Count"
+                    title="Products"
                     value={stats.products}
                     icon={Package}
                     color="orange"
@@ -131,14 +128,14 @@ export default function DashboardPage() {
                     <div className="p-8 border-b border-border/50 flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-black italic uppercase tracking-tight mb-1">
-                                Recent Activity
+                                Recent Orders
                             </h2>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                Live Transaction Log
+                                Latest transactions
                             </p>
                         </div>
                         <Link href="/dashboard/orders" className="text-xs font-black uppercase tracking-widest text-accent hover:underline decoration-2">
-                            View Monitor Station →
+                            View All Orders →
                         </Link>
                     </div>
 
@@ -155,7 +152,7 @@ export default function DashboardPage() {
                             <tbody>
                                 {recentOrders.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-8 py-20 text-center text-muted-foreground font-bold uppercase tracking-widest">No recent transactions recorded.</td>
+                                        <td colSpan={4} className="px-8 py-20 text-center text-muted-foreground font-bold uppercase tracking-widest">No recent orders found.</td>
                                     </tr>
                                 ) : (
                                     recentOrders.map((order) => (
@@ -185,9 +182,9 @@ export default function DashboardPage() {
                         </h2>
                         <div className="grid grid-cols-1 gap-4">
                             {[
-                                { label: 'Register Product', icon: Package, href: '/dashboard/products' },
-                                { label: 'Logistics Hub', icon: ArrowUpRight, href: '/dashboard/shipments' },
-                                { label: 'Resident Registry', icon: Users, href: '/dashboard/customers' },
+                                { label: 'Add Product', icon: Package, href: '/dashboard/products' },
+                                { label: 'Shipments', icon: ArrowUpRight, href: '/dashboard/shipments' },
+                                { label: 'Customers', icon: Users, href: '/dashboard/customers' },
                             ].map((action) => (
                                 <Link key={action.label} href={action.href}
                                     className="flex items-center justify-between p-4 bg-white border border-border/50 rounded-2xl hover:border-accent/50 hover:shadow-lg transition-all group">
@@ -205,10 +202,10 @@ export default function DashboardPage() {
 
                     <div className="bg-accent p-8 rounded-3xl text-white relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
-                        <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-2 relative">Pro Support</h3>
-                        <p className="text-xs font-bold text-white/70 mb-6 relative">Elite analytics node is currently operational.</p>
+                        <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-2 relative">Support</h3>
+                        <p className="text-xs font-bold text-white/70 mb-6 relative">Analytics and reports are ready.</p>
                         <button className="w-full py-4 bg-white text-accent rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform relative">
-                            Network Status: Optimal
+                            System Status: Good
                         </button>
                     </div>
                 </div>

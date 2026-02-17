@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
                     <h1 className="text-6xl font-black italic tracking-tighter uppercase leading-none text-white">
                         Force<span className="text-accent">Admin</span>
                     </h1>
-                    <p className="text-xs font-bold text-white/40 uppercase tracking-[0.4em]">Secure Access Point</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-[0.4em]">Admin Panel</p>
                 </div>
 
                 {/* Login Card */}
@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     className="w-full bg-white/5 border border-white/10 text-white px-14 py-5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all placeholder:text-white/20 font-bold"
-                                    placeholder="SECURITY KEY"
+                                    placeholder="PASSWORD"
                                 />
                             </div>
                         </div>
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
                                 </>
                             ) : (
                                 <>
-                                    <span>Initialize Session</span>
+                                    <span>Log In</span>
                                     <ArrowRight className="group-hover/btn:translate-x-2 transition-transform" size={20} />
                                 </>
                             )}
@@ -109,8 +109,8 @@ export default function AdminLoginPage() {
 
                 {/* Footer Info */}
                 <div className="mt-12 flex justify-center gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">
-                    <span className="flex items-center gap-2 underline decoration-accent/30 decoration-2">End-to-End Encrypted</span>
-                    <span className="flex items-center gap-2 underline decoration-accent/30 decoration-2">Audit-Logged Access</span>
+                    <span className="flex items-center gap-2 underline decoration-accent/30 decoration-2">Secure Connection</span>
+                    <span className="flex items-center gap-2 underline decoration-accent/30 decoration-2">Restricted Access</span>
                 </div>
             </div>
         </div>

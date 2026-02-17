@@ -78,6 +78,22 @@ class APIClient {
         return response;
     }
 
+    async resendOtp(email: string): Promise<{ message: string; user?: { otp?: string } }> {
+        const res = await fetch(`${API_URL}/api/auth/resend-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email }),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to resend OTP');
+        }
+
+        return res.json();
+    }
+
     async login(email: string, password: string): Promise<LoginResponse> {
         const res = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',

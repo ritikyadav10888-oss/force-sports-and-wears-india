@@ -322,3 +322,47 @@ export const getMe = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch user' });
     }
 };
+
+export const resendOtp = async (req: AuthRequest, res: Response) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ error: 'User is already verified' });
+        }
+
+        // Generate new OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                otp,
+                otpExpiresAt
+            }
+        });
+
+        console.log(`[OTP Resend] Generated for ${email}: ${otp}`);
+
+        res.json({
+            message: 'OTP resent successfully',
+            user: {
+                // Return OTP in development mode for convenience
+                otp: process.env.NODE_ENV === 'development' ? otp : undefined
+            }
+        });
+
+    } catch (error) {
+        console.error('Resend OTP error:', error);
+        res.status(500).json({ error: 'Failed to resend OTP' });
+    }
+};

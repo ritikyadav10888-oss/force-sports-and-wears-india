@@ -3,16 +3,21 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { User, Package, MapPin, LogOut, Settings, CreditCard, Loader2 } from "lucide-react";
+import { User, Package, MapPin, LogOut, Settings, CreditCard, Loader2, RefreshCcw, HelpCircle } from "lucide-react";
 import { useAuth } from "@/store/useAuth";
+import { useCart } from "@/store/useCart";
 import { api } from "@/lib/api-client";
 import Link from "next/link";
+import { SupportModal } from "@/components/SupportModal";
 
 export default function AccountPage() {
     const router = useRouter();
     const { user, isAuthenticated, logout, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState("profile");
     const [loading, setLoading] = useState(true);
+
+    const [isSupportOpen, setIsSupportOpen] = useState(false);
+    const [selectedOrderForSupport, setSelectedOrderForSupport] = useState("");
 
     // Sync tab with URL
     useEffect(() => {
@@ -52,7 +57,7 @@ export default function AccountPage() {
                     // If 401, logout
                     logout();
                     // Force a hard navigation to ensure state is fresh
-                    window.location.href = '/account';
+                    window.location.href = '/?login=true';
                     // Don't redirect to login immediately to avoid loops, just kick to home
                 }
             }
@@ -67,7 +72,7 @@ export default function AccountPage() {
             setFetchingOrders(true);
             api.getMyOrders()
                 .then((data) => {
-                    setOrders(data);
+                    setOrders(data.orders || []);
                 })
                 .catch((err) => console.error("Failed to fetch orders:", err))
                 .finally(() => setFetchingOrders(false));
@@ -259,7 +264,34 @@ export default function AccountPage() {
                                                             {order.items?.length || 0} items • ₹{order.totalAmount?.toLocaleString()}
                                                         </p>
                                                     </div>
-                                                    <div className="flex items-center">
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedOrderForSupport(order.id);
+                                                                setIsSupportOpen(true);
+                                                            }}
+                                                            className="px-6 py-3 border border-border text-muted-foreground hover:bg-secondary hover:text-foreground rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                                                        >
+                                                            <HelpCircle size={14} /> Need Help?
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                const { addItem } = useCart.getState();
+                                                                order.items.forEach((item: any) => {
+                                                                    const product = {
+                                                                        ...item.product,
+                                                                        image: item.product.images?.[0] || '',
+                                                                        price: Number(item.price),
+                                                                        specs: [],
+                                                                        highlights: []
+                                                                    };
+                                                                    addItem(product, item.quantity);
+                                                                });
+                                                            }}
+                                                            className="px-6 py-3 border border-accent/20 text-accent hover:bg-accent hover:text-background rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                                                        >
+                                                            <RefreshCcw size={14} /> Reorder
+                                                        </button>
                                                         <Link href={`/orders/${order.id}`} className="px-6 py-3 bg-secondary hover:bg-accent hover:text-background rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                                             View Details
                                                         </Link>
@@ -352,6 +384,12 @@ export default function AccountPage() {
                     </div>
                 </div>
             </div>
+
+            <SupportModal
+                isOpen={isSupportOpen}
+                onClose={() => setIsSupportOpen(false)}
+                orderId={selectedOrderForSupport}
+            />
         </div>
     );
 }

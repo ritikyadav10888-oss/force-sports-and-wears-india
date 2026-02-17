@@ -15,8 +15,8 @@ export const authenticate = (
     next: NextFunction
 ) => {
     try {
-        // Get token from cookie or Authorization header
-        const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+        // Get token from Authorization header (priority) or cookie
+        const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies.token;
 
         if (!token) {
             return res.status(401).json({ error: 'No token provided' });

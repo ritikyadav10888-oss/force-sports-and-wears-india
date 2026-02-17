@@ -65,17 +65,26 @@ model AuditLog {
   @@index([createdAt])
 }
 
+enum ReturnPolicy {
+  RETURNABLE
+  EXCHANGE_ONLY
+  NON_RETURNABLE
+}
+
 model Product {
-  id          String      @id @default(uuid())
-  name        String
-  description String
-  price       Decimal     @db.Decimal(10, 2)
-  images      String[]
-  category    String
-  stock       Int
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
+  id           String       @id @default(uuid())
+  name         String
+  description  String
+  price        Decimal      @db.Decimal(10, 2)
+  images       String[]
+  category     String
+  stock        Int
+  sizes        String[]     @default([])
+  returnPolicy ReturnPolicy @default(RETURNABLE)
+  deliveryDays Int          @default(7)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  orderItems   OrderItem[]
 }
 
 model Order {

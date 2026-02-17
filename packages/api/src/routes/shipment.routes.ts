@@ -3,7 +3,8 @@ import {
     createShipment,
     getAllShipments,
     getShipmentById,
-    updateShipmentStatus
+    updateShipmentStatus,
+    deleteShipment
 } from '../controllers/shipment.controller';
 import { authenticate, requireAdmin } from '../middleware/authenticate';
 
@@ -14,5 +15,6 @@ router.post('/', authenticate, requireAdmin, createShipment);
 router.get('/', authenticate, requireAdmin, getAllShipments);
 router.get('/:id', authenticate, requireAdmin, getShipmentById);
 router.put('/:id/status', authenticate, requireAdmin, updateShipmentStatus);
+router.delete('/:id', authenticate, requireAdmin, deleteShipment);
 
 export default router;

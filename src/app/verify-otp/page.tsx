@@ -24,7 +24,7 @@ export default function VerifyOTPPage() {
     }, [otpParam]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [resendTimer, setResendTimer] = useState(60);
+    const [resendTimer, setResendTimer] = useState(0);
 
     const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
@@ -119,12 +119,27 @@ export default function VerifyOTPPage() {
         }
     };
 
-    const handleResend = () => {
-        // Here we would trigger resend API
-        // For now just reset timer
+    const handleResend = async () => {
         setResendTimer(60);
-        setError("New code sent (Simulated)");
-        // TODO: Call API to resend OTP
+        setError("");
+
+        try {
+            if (email) {
+                const response = await api.resendOtp(email);
+                setError(response.message || "New code sent");
+
+                // Auto-fill in dev mode
+                if (response.user?.otp) {
+                    setOtp(response.user.otp.split(""));
+                    if (inputRefs.current[5]) {
+                        // Focus verification button or last input
+                        inputRefs.current[5]?.focus();
+                    }
+                }
+            }
+        } catch (err: any) {
+            setError(err.message || "Failed to resend code");
+        }
     };
 
     return (

@@ -173,28 +173,31 @@ export default function ProductPage() {
 
                         {/* Selection Section */}
                         <div className="space-y-10 mb-12">
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Select Size</h4>
-                                    <button className="text-[10px] font-black uppercase tracking-[0.2em] underline underline-offset-4 hover:text-accent transition-colors">Size Guide</button>
+                            {/* Size Selection - Only if sizes exist */}
+                            {product.sizes && product.sizes.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Select Size</h4>
+                                        <button className="text-[10px] font-black uppercase tracking-[0.2em] underline underline-offset-4 hover:text-accent transition-colors">Size Guide</button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
+                                        {product.sizes.map((size: string) => (
+                                            <button
+                                                key={size}
+                                                onClick={() => setSelectedSize(size)}
+                                                className={cn(
+                                                    "w-16 h-16 rounded-2xl font-black transition-all flex items-center justify-center border-2",
+                                                    selectedSize === size
+                                                        ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
+                                                        : "bg-transparent border-border hover:border-accent text-foreground"
+                                                )}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="flex flex-wrap gap-3">
-                                    {["S", "M", "L", "XL"].map((size) => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={cn(
-                                                "w-16 h-16 rounded-2xl font-black transition-all flex items-center justify-center border-2",
-                                                selectedSize === size
-                                                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
-                                                    : "bg-transparent border-border hover:border-accent text-foreground"
-                                            )}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                            )}
 
                             <div className="space-y-4 flex items-center gap-8">
                                 <div>
@@ -217,7 +220,13 @@ export default function ProductPage() {
                                 </div>
                                 <div className="flex-1 pt-8">
                                     <button
-                                        onClick={() => addItem(product, quantity)}
+                                        onClick={() => {
+                                            const itemToAdd = {
+                                                ...product,
+                                                selectedSize: product.sizes?.length ? selectedSize : undefined
+                                            };
+                                            addItem(itemToAdd, quantity);
+                                        }}
                                         className="w-full py-6 bg-primary text-primary-foreground rounded-[2rem] font-black text-xl uppercase tracking-widest flex items-center justify-center gap-4 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20 transition-all active:scale-[0.98] shadow-lg group"
                                     >
                                         Add to Bag <ShoppingBag size={24} className="group-hover:rotate-12 transition-transform" />
@@ -239,23 +248,42 @@ export default function ProductPage() {
                             </div>
                         </div>
 
-                        {/* Trust Badges */}
+                        {/* Trust Badges & Policies */}
                         <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 pt-12 border-t border-border/50">
-                            {[
-                                { icon: Truck, label: "Fast Shipping", detail: "2-4 Business Days" },
-                                { icon: RotateCcw, label: "Easy Returns", detail: "30-Day Window" },
-                                { icon: ShieldCheck, label: "100% Secure", detail: "Encrypted Data" },
-                            ].map((feature, i) => (
-                                <div key={i} className="flex gap-4 items-center">
-                                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
-                                        <feature.icon size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest">{feature.label}</p>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">{feature.detail}</p>
-                                    </div>
+                            <div className="flex gap-4 items-center">
+                                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
+                                    <Truck size={20} />
                                 </div>
-                            ))}
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest">Fast Delivery</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">Est. {product.deliveryDays || 7} Days</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 items-center">
+                                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
+                                    <RotateCcw size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest">
+                                        {product.returnPolicy === 'NON_RETURNABLE' ? 'Non-Returnable' :
+                                            product.returnPolicy === 'EXCHANGE_ONLY' ? 'Exchange Only' : 'Easy Returns'}
+                                    </p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">
+                                        {product.returnPolicy === 'NON_RETURNABLE' ? 'Final Sale' : 'Tags Required'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 items-center">
+                                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-accent">
+                                    <ShieldCheck size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest">100% Secure</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">Encrypted Data</p>
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
                 </div>

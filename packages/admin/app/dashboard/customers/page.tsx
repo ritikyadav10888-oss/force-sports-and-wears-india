@@ -1,10 +1,10 @@
-'use client';
-
 import React, { useEffect, useState } from 'react';
-import { Users, Search, Mail, Phone, Calendar, ArrowUpRight, Loader2 } from 'lucide-react';
+import { Users, Search, Mail, Phone, Calendar, ArrowUpRight, Loader2, DollarSign } from 'lucide-react';
 import { adminAPI } from '@/lib/admin-api-client';
+import { useRouter } from 'next/navigation';
 
 export default function CustomersPage() {
+    const router = useRouter();
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -52,51 +52,76 @@ export default function CustomersPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {customers.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-muted-foreground font-bold uppercase tracking-widest">
-                        No customer profiles detected in registry.
-                    </div>
-                ) : (
-                    customers.map((cust) => (
-                        <div key={cust.id} className="glass-card p-8 group hover:border-accent/30 transition-all duration-300">
-                            <div className="flex items-center justify-between mb-8">
-                                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all">
-                                    <Users size={32} />
-                                </div>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate max-w-[100px]">ID: {cust.id.split('-')[0]}</span>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h3 className="text-2xl font-black italic uppercase tracking-tighter group-hover:text-accent transition-colors">{cust.name}</h3>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground truncate">
-                                        <Mail size={14} className="text-accent" /> {cust.email}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                                        <Calendar size={14} className="text-accent" /> Member Since: {new Date(cust.createdAt).toLocaleDateString()}
-                                    </div>
-                                    {cust.phone && (
-                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                                            <Phone size={14} className="text-accent" /> {cust.phone}
+            <div className="glass-card overflow-hidden">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="bg-muted/50">
+                            <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">User ID</th>
+                            <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Customer</th>
+                            <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Contact</th>
+                            <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Since</th>
+                            <th className="px-10 py-6 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">Stats</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                        {customers.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="px-10 py-20 text-center text-muted-foreground font-bold uppercase tracking-widest">
+                                    No customer profiles found.
+                                </td>
+                            </tr>
+                        ) : (
+                            customers.map((cust) => (
+                                <tr
+                                    key={cust.id}
+                                    onClick={() => router.push(`/dashboard/customers/${cust.id}`)}
+                                    className="hover:bg-accent/5 transition-all cursor-pointer group"
+                                >
+                                    <td className="px-10 py-7">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all">
+                                                <Users size={18} />
+                                            </div>
+                                            <span className="text-sm font-black text-muted-foreground uppercase">{cust.id.slice(0, 8)}</span>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-border/30">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Orders</p>
-                                    <p className="text-xl font-black">{cust.totalOrders}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">LTV</p>
-                                    <p className="text-xl font-black italic underline decoration-accent/30">₹{cust.totalSpent.toLocaleString()}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
+                                    </td>
+                                    <td className="px-10 py-7">
+                                        <div className="flex flex-col">
+                                            <span className="text-xl font-black italic uppercase tracking-tighter group-hover:text-accent transition-colors">{cust.name}</span>
+                                            {cust.phone && (
+                                                <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
+                                                    <Phone size={10} /> {cust.phone}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-7">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                                            <Mail size={14} className="text-accent" /> {cust.email}
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-7">
+                                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                                            <Calendar size={14} /> {new Date(cust.createdAt).toLocaleDateString()}
+                                        </div>
+                                    </td>
+                                    <td className="px-10 py-7">
+                                        <div className="flex items-center gap-6">
+                                            <div>
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Orders</div>
+                                                <div className="text-sm font-black">{cust.totalOrders}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Spent</div>
+                                                <div className="text-sm font-black italic text-green-500">₹{cust.totalSpent.toLocaleString()}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
