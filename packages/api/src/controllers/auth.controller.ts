@@ -4,43 +4,6 @@ import { z } from 'zod';
 import prisma from '../config/database';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/authenticate';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase client initialization (using env vars)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
-
-// Initialize supabase lazily or with a check to prevent startup crash
-let supabase: any;
-try {
-    if (supabaseUrl && supabaseKey) {
-        supabase = createClient(supabaseUrl, supabaseKey);
-    } else {
-        console.warn('⚠️ Supabase credentials missing. Auth will fallback to local database.');
-        supabase = {
-            from: () => ({
-                select: () => ({
-                    eq: () => ({
-                        single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
-                    })
-                })
-            })
-        };
-    }
-} catch (error) {
-    console.error('Failed to initialize Supabase client:', error);
-}
-
-// Hardcoded Admin Credentials
-
-const HARDCODED_ADMIN = {
-    id: 'hardcoded-admin-id',
-    email: 'admin@force.com',
-    password: 'Admin@123', // In a real app, this should be a hash
-    name: 'Admin User',
-    role: 'ADMIN' as 'ADMIN' | 'CUSTOMER',
-    phone: '+1 111 222 3333'
-};
 
 // Validation schemas
 const registerSchema = z.object({
@@ -53,6 +16,15 @@ const registerSchema = z.object({
 const loginSchema = z.object({
     email: z.string().email(),
     password: z.string()
+});
+
+const verifyOtpSchema = z.object({
+    email: z.string().email(),
+    otp: z.string().min(6)
+});
+
+const resendOtpSchema = z.object({
+    email: z.string().email()
 });
 
 export const register = async (req: AuthRequest, res: Response) => {
@@ -113,11 +85,7 @@ export const register = async (req: AuthRequest, res: Response) => {
 
 export const verifyOtp = async (req: AuthRequest, res: Response) => {
     try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
-            return res.status(400).json({ error: 'Email and OTP are required' });
-        }
+        const { email, otp } = verifyOtpSchema.parse(req.body);
 
         const user = await prisma.user.findUnique({ where: { email } });
 
@@ -175,6 +143,9 @@ export const verifyOtp = async (req: AuthRequest, res: Response) => {
         });
 
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: error.errors });
+        }
         console.error('OTP Verification error:', error);
         res.status(500).json({ error: 'Verification failed' });
     }
@@ -184,57 +155,13 @@ export const login = async (req: AuthRequest, res: Response) => {
     try {
         const { email, password } = loginSchema.parse(req.body);
 
-        // Check for hardcoded admin first
-        if (email === HARDCODED_ADMIN.email && password === HARDCODED_ADMIN.password) {
-            const token = generateToken({
-                userId: HARDCODED_ADMIN.id,
-                email: HARDCODED_ADMIN.email,
-                role: HARDCODED_ADMIN.role
-            });
-
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
-
-            return res.json({
-                message: 'Login successful (Hardcoded Admin)',
-                user: {
-                    id: HARDCODED_ADMIN.id,
-                    email: HARDCODED_ADMIN.email,
-                    name: HARDCODED_ADMIN.name,
-                    role: HARDCODED_ADMIN.role
-                },
-                token
-            });
-        }
-
-        // Find user - Try Supabase first, then fallback to Prisma
-        let user;
-        const { data: supabaseUser, error: supabaseError } = await supabase
-            .from('User')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-        if (supabaseUser) {
-            user = supabaseUser;
-        } else {
-            // Fallback to Prisma if Supabase direct fails (e.g. RLS)
-            try {
-                user = await prisma.user.findUnique({ where: { email } });
-            } catch (prismaError) {
-                console.error('Prisma connection failed:', prismaError);
-                throw new Error('Database connection failed');
-            }
-        }
+        const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Check verification (Excluding Hardcoded Admin)
+        // Check verification
         if (!user.isVerified && user.role !== 'ADMIN') {
             return res.status(403).json({ error: 'Email not verified. Please verify your email.' });
         }
@@ -287,20 +214,6 @@ export const logout = async (req: AuthRequest, res: Response) => {
 
 export const getMe = async (req: AuthRequest, res: Response) => {
     try {
-        // Check for hardcoded admin
-        if (req.user?.userId === HARDCODED_ADMIN.id) {
-            return res.json({
-                user: {
-                    id: HARDCODED_ADMIN.id,
-                    email: HARDCODED_ADMIN.email,
-                    name: HARDCODED_ADMIN.name,
-                    phone: HARDCODED_ADMIN.phone,
-                    role: HARDCODED_ADMIN.role,
-                    createdAt: new Date().toISOString()
-                }
-            });
-        }
-
         const user = await prisma.user.findUnique({
             where: { id: req.user?.userId },
             select: {
@@ -325,10 +238,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 
 export const resendOtp = async (req: AuthRequest, res: Response) => {
     try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ error: 'Email is required' });
-        }
+        const { email } = resendOtpSchema.parse(req.body);
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
@@ -362,6 +272,9 @@ export const resendOtp = async (req: AuthRequest, res: Response) => {
         });
 
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: error.errors });
+        }
         console.error('Resend OTP error:', error);
         res.status(500).json({ error: 'Failed to resend OTP' });
     }
