@@ -3,6 +3,8 @@ import 'dotenv/config'; // Load env vars before any other imports
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import hpp from 'hpp';
 import authRoutes from './routes/auth.routes';
 import productRoutes from './routes/product.routes';
 import orderRoutes from './routes/order.routes';
@@ -21,13 +23,30 @@ const PORT = process.env.PORT || 5000;
 // Security: Trust proxy for accurate IP addresses behind reverse proxies
 app.set('trust proxy', 1);
 
+// Security: Helmet for secure headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" } // Allow serving images
+}));
+
 // Security: CORS configuration with origin validation
+const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [];
 app.use(cors({
-    origin: true, // Allow ALL origins temporarily to debug production access
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Secret'],
 }));
+
+// Security: Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -68,7 +87,9 @@ app.get('/api/security-check', (req, res) => {
         jwtSecretConfigured: !!process.env.JWT_SECRET,
         encryptionKeyConfigured: !!process.env.ENCRYPTION_KEY,
         stripeConfigured: !!process.env.STRIPE_SECRET_KEY,
-        corsOrigins: process.env.CORS_ORIGINS?.split(',').length || 0,
+        corsOrigins: allowedOrigins.length,
+        helmet: true,
+        hpp: true
     });
 });
 
@@ -86,5 +107,3 @@ app.listen(Number(PORT), '0.0.0.0', () => {
 
 
 export default app;
-
-// Restart trigger: 403 fix verification
