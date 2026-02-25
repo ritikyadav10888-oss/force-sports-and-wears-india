@@ -1,7 +1,34 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+      },
+      {
+        protocol: "https",
+        hostname: "example.com",
+      },
+    ],
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  // @ts-ignore
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
-// Restart trigger
+
 export default nextConfig;

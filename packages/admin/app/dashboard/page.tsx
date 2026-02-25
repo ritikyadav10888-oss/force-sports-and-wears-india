@@ -187,7 +187,7 @@ export default function DashboardPage() {
                                 { label: 'Customers', icon: Users, href: '/dashboard/customers' },
                             ].map((action) => (
                                 <Link key={action.label} href={action.href}
-                                    className="flex items-center justify-between p-4 bg-white border border-border/50 rounded-2xl hover:border-accent/50 hover:shadow-lg transition-all group">
+                                    className="flex items-center justify-between p-4 bg-secondary border border-border/50 rounded-2xl hover:border-accent/50 hover:shadow-lg transition-all group text-foreground">
                                     <div className="flex items-center gap-4">
                                         <div className="p-2 bg-accent/5 rounded-xl group-hover:bg-accent group-hover:text-white transition-colors">
                                             <action.icon size={18} />

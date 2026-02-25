@@ -23,15 +23,40 @@ export const useCurrency = create<CurrencyState>()(
                     const res = await fetch("https://ipapi.co/json/");
                     const data = await res.json();
 
-                    if (data.country_code === "US") {
-                        set({ currency: "USD", symbol: "$", rate: 0.012 }); // 1 INR = 0.012 USD approx
-                    } else if (data.country_code === "GB") {
-                        set({ currency: "GBP", symbol: "£", rate: 0.0094 });
-                    } else if (["FR", "DE", "IT", "ES"].includes(data.country_code)) {
-                        set({ currency: "EUR", symbol: "€", rate: 0.011 });
-                    } else {
-                        set({ currency: "INR", symbol: "₹", rate: 1 });
+                    if (!data.country_code || !data.currency) {
+                        return; // Keep default (INR)
                     }
+
+                    // If user is in India, strictly show INR
+                    if (data.country_code === "IN") {
+                        set({ currency: "INR", symbol: "₹", rate: 1 });
+                        return;
+                    }
+
+                    // Fetch dynamic exchange rates from INR
+                    const ratesRes = await fetch("https://open.er-api.com/v6/latest/INR");
+                    const ratesData = await ratesRes.json();
+
+                    const userCurrency = data.currency;
+                    const rate = ratesData.rates[userCurrency] || 1;
+
+                    // Get correct currency symbol
+                    let symbol = userCurrency;
+                    try {
+                        const parts = new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: userCurrency,
+                        }).formatToParts(0);
+                        const currencyPart = parts.find(p => p.type === 'currency');
+                        if (currencyPart) {
+                            symbol = currencyPart.value;
+                        }
+                    } catch (e) {
+                        console.error("Failed to get symbol:", e);
+                    }
+
+                    set({ currency: userCurrency, symbol, rate });
+
                 } catch (error) {
                     console.error("Failed to detect location:", error);
                 }

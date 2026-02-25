@@ -29,17 +29,16 @@ export const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
         try {
             const response = await api.login(email, password);
-            // Sync with Zustand store
-            setAuthLogin(
-                response.user.phone || '',
-                'IN',
-                '+91',
-                {
-                    firstName: response.user.name?.split(' ')[0] || '',
-                    lastName: response.user.name?.split(' ').slice(1).join(' ') || '',
-                    email: response.user.email
-                }
-            );
+            // Sync with Zustand store - pass the full user object including id
+            setAuthLogin({
+                id: response.user.id,
+                phone: response.user.phone || '',
+                email: response.user.email,
+                name: response.user.name,
+                role: response.user.role,
+                firstName: response.user.name?.split(' ')[0] || '',
+                lastName: response.user.name?.split(' ').slice(1).join(' ') || '',
+            });
 
             // Close modal and redirect to account
             onClose();

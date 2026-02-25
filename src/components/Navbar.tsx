@@ -24,18 +24,7 @@ export const Navbar = () => {
     const { detectCurrency } = useCurrency();
     const { items, toggleCart } = useCart();
     const { user, isAuthenticated, logout } = useAuth();
-    const searchParams = useSearchParams();
     const router = useRouter();
-
-    useEffect(() => {
-        if (searchParams.get('login') === 'true') {
-            setLoginModalOpen(true);
-            // Optional: Clean up URL after opening modal
-            // const newParams = new URLSearchParams(searchParams.toString());
-            // newParams.delete('login');
-            // router.replace(`?${newParams.toString()}`, { scroll: false });
-        }
-    }, [searchParams]);
 
     const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -50,12 +39,15 @@ export const Navbar = () => {
 
     return (
         <>
+            <React.Suspense fallback={null}>
+                <LoginParamHandler setLoginModalOpen={setLoginModalOpen} />
+            </React.Suspense>
             <SearchOverlay isOpen={searchOpen} onClose={closeSearch} />
             <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
 
-            {/* Top Utility Bar */}
+            {/* Top Utility Bar - Hidden on Mobile */}
             <div className={cn(
-                "fixed top-0 left-0 right-0 z-50 bg-background border-b border-border transition-transform duration-300",
+                "hidden sm:block fixed top-0 left-0 right-0 z-50 bg-background border-b border-border transition-transform duration-300",
                 isScrolled ? "-translate-y-full" : "translate-y-0"
             )}>
                 <div className="max-w-[1920px] mx-auto px-6 py-2 flex justify-end items-center gap-6 text-[11px] font-medium">
@@ -76,7 +68,7 @@ export const Navbar = () => {
             {/* Main Navbar */}
             <nav className={cn(
                 "fixed left-0 right-0 z-50 bg-background border-b border-border transition-all duration-300",
-                isScrolled ? "top-0 shadow-md" : "top-[38px]"
+                isScrolled ? "top-0 shadow-md" : "top-0 sm:top-[38px] shadow-sm sm:shadow-none"
             )}>
                 <div className="max-w-[1920px] mx-auto px-6 py-4 flex items-center justify-between gap-8">
                     {/* Logo */}
@@ -89,6 +81,10 @@ export const Navbar = () => {
                         <Link href="/" className="hover:text-foreground/60 transition-colors">Shop</Link>
                         <Link href="/new" className="hover:text-foreground/60 transition-colors">New Arrivals</Link>
                         <Link href="/collections" className="hover:text-foreground/60 transition-colors">Collections</Link>
+                        <Link href="/custom" className="relative font-black text-accent hover:text-accent/80 transition-colors flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse inline-block" />
+                            Custom
+                        </Link>
                         <Link href="/about" className="hover:text-foreground/60 transition-colors">About</Link>
                     </div>
 
@@ -241,6 +237,14 @@ export const Navbar = () => {
                                         {item.label}
                                     </Link>
                                 ))}
+                                <Link
+                                    href="/custom"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-2xl font-black py-3 text-accent flex items-center gap-2"
+                                >
+                                    <span className="w-2 h-2 rounded-full bg-accent animate-pulse inline-block" />
+                                    Custom
+                                </Link>
                             </div>
                         </motion.div>
                     )}
@@ -249,3 +253,13 @@ export const Navbar = () => {
         </>
     );
 };
+
+function LoginParamHandler({ setLoginModalOpen }: { setLoginModalOpen: (open: boolean) => void }) {
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        if (searchParams.get('login') === 'true') {
+            setLoginModalOpen(true);
+        }
+    }, [searchParams, setLoginModalOpen]);
+    return null;
+}

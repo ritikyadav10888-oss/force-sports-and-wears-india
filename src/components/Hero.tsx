@@ -7,12 +7,12 @@ import { BrandLogo } from "./BrandLogo";
 
 export const Hero = () => {
     return (
-        <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-32">
+        <section className="relative min-h-[80vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden pt-24 sm:pt-32">
             {/* Animated Background Elements */}
             <div className="absolute top-1/4 -left-20 w-80 h-80 bg-accent/20 rounded-full blur-[120px] animate-pulse" />
             <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-primary/10 rounded-full blur-[140px]" />
 
-            <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center relative z-10">
                 <motion.div
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}

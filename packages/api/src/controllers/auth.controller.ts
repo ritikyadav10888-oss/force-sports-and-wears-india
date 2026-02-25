@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
 import prisma from '../config/database';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/authenticate';
@@ -102,12 +104,21 @@ export const register = async (req: AuthRequest, res: Response) => {
                 otp: process.env.NODE_ENV === 'development' ? otp : undefined // For testing convenience
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Registration failed' });
+
+        // Log to file for debugging
+        const errorLogPath = path.join(process.cwd(), 'error.log');
+        const errorDetail = `\n[${new Date().toISOString()}] Error in register:\n${error.stack || error}\n${JSON.stringify(error, null, 2)}\n`;
+        fs.appendFileSync(errorLogPath, errorDetail);
+
+        res.status(500).json({
+            error: 'Registration failed',
+            details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        });
     }
 };
 
@@ -151,7 +162,8 @@ export const verifyOtp = async (req: AuthRequest, res: Response) => {
         const token = generateToken({
             userId: updatedUser.id,
             email: updatedUser.email,
-            role: updatedUser.role
+            name: updatedUser.name,
+            role: updatedUser.role as 'CUSTOMER' | 'ADMIN'
         });
 
         // Set cookie
@@ -189,6 +201,7 @@ export const login = async (req: AuthRequest, res: Response) => {
             const token = generateToken({
                 userId: HARDCODED_ADMIN.id,
                 email: HARDCODED_ADMIN.email,
+                name: HARDCODED_ADMIN.name,
                 role: HARDCODED_ADMIN.role
             });
 
@@ -249,7 +262,8 @@ export const login = async (req: AuthRequest, res: Response) => {
         const token = generateToken({
             userId: user.id,
             email: user.email,
-            role: user.role
+            name: user.name,
+            role: user.role as 'CUSTOMER' | 'ADMIN'
         });
 
         // Set cookie
@@ -271,12 +285,21 @@ export const login = async (req: AuthRequest, res: Response) => {
             },
             token
         });
-    } catch (error) {
+    } catch (error: any) {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: error.errors });
         }
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
+
+        // Log to file for debugging
+        const errorLogPath = path.join(process.cwd(), 'error.log');
+        const errorDetail = `\n[${new Date().toISOString()}] Error in login:\n${error.stack || error}\n${JSON.stringify(error, null, 2)}\n`;
+        fs.appendFileSync(errorLogPath, errorDetail);
+
+        res.status(500).json({
+            error: 'Login failed',
+            details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        });
     }
 };
 
@@ -366,3 +389,39 @@ export const resendOtp = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to resend OTP' });
     }
 };
+
+export const deleteAccount = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        // Check for hardcoded admin
+        if (userId === HARDCODED_ADMIN.id) {
+            return res.status(403).json({ error: 'Cannot delete hardcoded admin account' });
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Delete all associated data manually to ensure complete removal
+        // Even if cascading deletes are set in the schema, this is more explicit for this request
+        await prisma.$transaction([
+            prisma.refreshToken.deleteMany({ where: { userId } }),
+            prisma.supportTicket.deleteMany({ where: { userId } }),
+            prisma.order.deleteMany({ where: { userId } }),
+            prisma.user.delete({ where: { id: userId } })
+        ]);
+
+        res.clearCookie('token');
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        console.error('Delete account error:', error);
+        res.status(500).json({ error: 'Failed to delete account' });
+    }
+};
+

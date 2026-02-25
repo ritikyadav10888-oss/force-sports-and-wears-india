@@ -1,0 +1,147 @@
+// This is a SQLite-compatible version of your schema
+// Enums are replaced with String + comments
+// Decimal is replaced with Float
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String         
+  role          String         @default("CUSTOMER") // Role enum: CUSTOMER, ADMIN
+  name          String
+  phone         String?
+  loginAttempts Int            @default(0)
+  lockoutUntil  DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  isVerified    Boolean        @default(false)
+  otp           String?
+  otpExpiresAt  DateTime?
+  orders        Order[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+  
+  @@index([userId])
+  @@index([token])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String?
+  action       String   
+  resource     String   
+  resourceId   String?
+  ipAddress    String
+  userAgent    String
+  changes      String?  
+  status       String   
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Product {
+  id           String       @id @default(uuid())
+  name         String
+  description  String
+  price        Float        
+  images       String       // SQLite does not support String[]
+  category     String
+  stock        Int
+  sizes        String       @default("") // SQLite does not support String[]
+  returnPolicy String       @default("RETURNABLE") // ReturnPolicy enum
+  deliveryDays Int          @default(7)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  status        String      @default("PENDING") // OrderStatus enum
+  total         Float       
+  subtotal      Float       
+  shipping      Float       
+  paymentMethod String
+  paymentStatus String      @default("pending")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         OrderItem[]
+  shipment      Shipment?
+  shippingAddress ShippingAddress?
+  supportTickets SupportTicket[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float   
+}
+
+model ShippingAddress {
+  id        String @id @default(uuid())
+  orderId   String @unique
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name      String
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  phone     String
+}
+
+model Shipment {
+  id             String   @id @default(uuid())
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  trackingNumber String   @unique
+  carrier        String
+  status         String
+  estimatedDate  DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SupportTicket {
+  id          String       @id @default(uuid())
+  orderId     String?
+  order       Order?       @relation(fields: [orderId], references: [id])
+  userId      String?
+  issueType   String
+  description String
+  status      String       @default("OPEN") // TicketStatus enum
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([orderId])
+  @@index([userId])
+}

@@ -24,28 +24,32 @@ export const AddProductModal = ({ isOpen, onClose, onSuccess, product }: AddProd
         returnPolicy: 'RETURNABLE',
         deliveryDays: '7'
     });
+    const [hasSizes, setHasSizes] = useState(false);
     const [imageUrls, setImageUrls] = useState<string[]>(['']);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen) {
             if (product) {
+                const sizesStr = product.sizes ? product.sizes.join(', ') : '';
                 setFormData({
                     name: product.name || '',
                     description: product.description || '',
                     price: product.price || '',
                     category: product.category || '',
                     stock: product.stock || '',
-                    sizes: product.sizes ? product.sizes.join(', ') : '',
+                    sizes: sizesStr,
                     returnPolicy: product.returnPolicy || 'RETURNABLE',
                     deliveryDays: product.deliveryDays || '7'
                 });
+                setHasSizes(sizesStr.length > 0);
                 setImageUrls(product.images && product.images.length > 0 ? product.images : ['']);
             } else {
                 setFormData({
                     name: '', description: '', price: '', category: '', stock: '',
                     sizes: '', returnPolicy: 'RETURNABLE', deliveryDays: '7'
                 });
+                setHasSizes(false);
                 setImageUrls(['']);
             }
             setError('');
@@ -205,32 +209,97 @@ export const AddProductModal = ({ isOpen, onClose, onSuccess, product }: AddProd
                                 placeholder="Select or Type..."
                             />
                             <datalist id="categories">
+                                {/* By Product Type */}
+                                <option value="T-Shirts" />
+                                <option value="Jersey" />
+                                <option value="Shorts" />
+                                <option value="Trackpants" />
+                                <option value="Cap" />
+                                {/* By Sport */}
                                 <option value="Cricket" />
                                 <option value="Badminton" />
                                 <option value="Running" />
                                 <option value="Football" />
-                                <option value="Training" />
                                 <option value="Pickleball" />
-                                <option value="T-Shirts" />
-                                <option value="Hoodies" />
-                                <option value="Pants" />
                             </datalist>
                         </div>
 
-                        {/* Sizes - Only for Wearables */}
-                        {['T-Shirts', 'Hoodies', 'Pants', 'Tracksuits'].some(c => formData.category.includes(c)) && (
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sizes (Comma Separated)</label>
-                                <input
-                                    type="text"
-                                    value={formData.sizes}
-                                    onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
-                                    className="w-full p-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-accent/50 outline-none font-medium"
-                                    placeholder="S, M, L, XL, XXL..."
-                                />
-                                <p className="text-[10px] text-muted-foreground">Available: S, M, L, XL, XXL, XXXL</p>
+                        {/* Sizes — Optional Toggle for any product */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                    Sizes
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setHasSizes(v => !v);
+                                        if (hasSizes) setFormData(f => ({ ...f, sizes: '' }));
+                                    }}
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${hasSizes
+                                        ? 'bg-accent text-white border-accent'
+                                        : 'bg-secondary/50 text-muted-foreground border-border hover:border-accent/50'
+                                        }`}
+                                >
+                                    <span className={`w-3 h-3 rounded-full border-2 transition-colors ${hasSizes ? 'bg-white border-white' : 'border-muted-foreground'
+                                        }`} />
+                                    {hasSizes ? 'Enabled' : 'Add Sizes'}
+                                </button>
                             </div>
-                        )}
+
+                            {hasSizes && (
+                                <div className="space-y-3 p-4 bg-secondary/20 rounded-xl border border-border/50">
+                                    {/* Quick-pick size buttons */}
+                                    <div className="space-y-2">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Quick Add</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '6', '7', '8', '9', '10', '11', '12'].map(sz => {
+                                                const already = formData.sizes.split(',').map(s => s.trim()).includes(sz);
+                                                return (
+                                                    <button
+                                                        key={sz}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const current = formData.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                                                            const next = already
+                                                                ? current.filter(s => s !== sz)
+                                                                : [...current, sz];
+                                                            setFormData(f => ({ ...f, sizes: next.join(', ') }));
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${already
+                                                            ? 'bg-accent text-white border-accent'
+                                                            : 'bg-secondary/30 text-foreground border-border hover:border-accent'
+                                                            }`}
+                                                    >
+                                                        {sz}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    {/* Manual text input */}
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Or type custom sizes</p>
+                                        <input
+                                            type="text"
+                                            value={formData.sizes}
+                                            onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
+                                            className="w-full p-3 bg-secondary/30 border border-border rounded-xl focus:ring-2 focus:ring-accent/50 outline-none font-medium text-sm"
+                                            placeholder="e.g. S, M, L, XL  or  UK6, UK7, UK8"
+                                        />
+                                    </div>
+                                    {formData.sizes && (
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {formData.sizes.split(',').map(s => s.trim()).filter(Boolean).map(sz => (
+                                                <span key={sz} className="px-2 py-1 bg-accent/10 text-accent text-[9px] font-black uppercase tracking-widest rounded-md border border-accent/20">
+                                                    {sz}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">

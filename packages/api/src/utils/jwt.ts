@@ -5,6 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret';
 export interface TokenPayload {
     userId: string;
     email: string;
+    name: string;
     role: 'CUSTOMER' | 'ADMIN';
 }
 

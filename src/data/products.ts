@@ -143,4 +143,26 @@ export const products: Product[] = [
         ],
         isFeatured: true,
     },
+    {
+        id: "6",
+        name: "Custom Team T-Shirt",
+        description: "Design your own premium team T-shirt. High-quality print and breathable fabric.",
+        price: 1500,
+        image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1780&auto=format&fit=crop",
+        images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1780&auto=format&fit=crop"],
+        category: "T-Shirts",
+        specs: [],
+        highlights: []
+    },
+    {
+        id: "7",
+        name: "Custom Athletic Shorts",
+        description: "Personalized athletic shorts for ultimate comfort and mobility. Add your team logo or text.",
+        price: 1200,
+        image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=1974&auto=format&fit=crop",
+        images: ["https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=1974&auto=format&fit=crop"],
+        category: "Shorts",
+        specs: [],
+        highlights: []
+    }
 ];

@@ -2,7 +2,6 @@ import { Response } from 'express';
 import { z } from 'zod';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/authenticate';
-import { OrderStatus } from '@prisma/client';
 
 const createShipmentSchema = z.object({
     orderId: z.string(),
@@ -130,11 +129,11 @@ export const updateShipmentStatus = async (req: AuthRequest, res: Response) => {
         });
 
         // Update order status based on shipment
-        let orderStatus: OrderStatus | undefined;
+        let orderStatus: string | undefined;
         const s = status.toUpperCase();
-        if (s === 'DELIVERED') orderStatus = OrderStatus.DELIVERED;
-        else if (s === 'SHIPPED') orderStatus = OrderStatus.SHIPPED;
-        else if (s === 'CANCELLED') orderStatus = OrderStatus.CANCELLED;
+        if (s === 'DELIVERED') orderStatus = 'DELIVERED';
+        else if (s === 'SHIPPED') orderStatus = 'SHIPPED';
+        else if (s === 'CANCELLED') orderStatus = 'CANCELLED';
 
         if (orderStatus) {
             await prisma.order.update({

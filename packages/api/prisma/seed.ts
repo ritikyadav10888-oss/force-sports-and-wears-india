@@ -49,7 +49,7 @@ async function main() {
             price: 1200.00,
             category: 'Cricket',
             stock: 100,
-            images: ['https://images.unsplash.com/photo-1589793463308-658b52d96696?q=80&w=2072&auto=format&fit=crop']
+            images: ['https://images.unsplash.com/photo-1593341646782-e0b495cff86d?q=80&w=2072&auto=format&fit=crop']
         },
         {
             name: 'Match Day Cricket Whites',
@@ -97,7 +97,7 @@ async function main() {
             price: 3499.00,
             category: 'Pickleball',
             stock: 20,
-            images: ['https://images.unsplash.com/photo-1628109673832-624268e37d57?q=80&w=2000&auto=format&fit=crop']
+            images: ['https://images.unsplash.com/photo-1693142518820-78d7a05f1546?q=80&w=2000&auto=format&fit=crop']
         },
         {
             name: 'AeroStrike Football',
@@ -117,18 +117,99 @@ async function main() {
         }
     ];
 
+    // Detect if we're using SQLite (which doesn't support String[])
+    const isSqlite = (prisma as any)._activeProvider === 'sqlite' || process.env.DATABASE_URL?.includes('file:');
+
     for (const product of products) {
+        const { images, ...rest } = product;
+        const productId = 'temp-' + product.name.replace(/\s+/g, '-').toLowerCase();
+
         await prisma.product.upsert({
-            where: { id: 'temp-' + product.name.replace(/\s+/g, '-').toLowerCase() }, // Just for upsert uniqueness in seed
-            update: product,
+            where: { id: productId },
+            update: {
+                ...rest,
+                images: isSqlite ? JSON.stringify(images) : images as any,
+            },
             create: {
-                ...product,
-                id: undefined // Let Prisma generate the UUID
+                ...rest,
+                id: productId,
+                images: isSqlite ? JSON.stringify(images) : images as any,
             }
         });
     }
 
     console.log(`✅ Seeded ${products.length} sample products.`);
+
+    // 3. Create Sample Customers
+    const customers = [
+        {
+            name: 'Vikram Singh',
+            email: 'vikram@example.com',
+            phone: '+91 9876543210'
+        },
+        {
+            name: 'Priya Sharma',
+            email: 'priya@example.com',
+            phone: '+91 9871234567'
+        },
+        {
+            name: 'Amit Patel',
+            email: 'amit@example.com',
+            phone: '+91 9988776655'
+        }
+    ];
+
+    const createdCustomers = [];
+    for (const customerData of customers) {
+        const password = await bcrypt.hash('Customer@123', 10);
+        const customer = await prisma.user.upsert({
+            where: { email: customerData.email },
+            update: {},
+            create: {
+                ...customerData,
+                password,
+                role: 'CUSTOMER',
+                isVerified: true
+            }
+        });
+        createdCustomers.push(customer);
+    }
+    console.log(`✅ Seeded ${createdCustomers.length} sample customers.`);
+
+    // 4. Create Sample Orders
+    if (createdCustomers.length > 0) {
+        const sampleProducts = await prisma.product.findMany({ take: 3 });
+        if (sampleProducts.length > 0) {
+            for (let i = 0; i < createdCustomers.length; i++) {
+                const customer = createdCustomers[i];
+                const product = sampleProducts[i % sampleProducts.length];
+
+                await prisma.order.upsert({
+                    where: { orderNumber: `ORD-100${i}` },
+                    update: {},
+                    create: {
+                        orderNumber: `ORD-100${i}`,
+                        userId: customer.id,
+                        status: i === 0 ? 'DELIVERED' : 'PROCESSING',
+                        total: product.price,
+                        subtotal: product.price,
+                        shipping: 0,
+                        paymentMethod: 'UPI',
+                        paymentStatus: 'paid',
+                        items: {
+                            create: {
+                                productId: product.id,
+                                quantity: 1,
+                                price: product.price
+                            }
+                        }
+                    }
+                });
+            }
+            console.log('✅ Seeded sample orders for customers.');
+        }
+    }
+
     console.log('🎉 Seed completed successfully!');
 }
 

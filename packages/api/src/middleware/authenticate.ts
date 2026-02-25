@@ -5,6 +5,7 @@ export interface AuthRequest extends Request {
     user?: {
         userId: string;
         email: string;
+        name: string;
         role: 'CUSTOMER' | 'ADMIN';
     };
 }
@@ -50,4 +51,13 @@ export const requireCustomer = (
         return res.status(403).json({ error: 'Customer access required' });
     }
     next();
+};
+
+export const authorize = (roles: string[]) => {
+    return (req: AuthRequest, res: Response, next: NextFunction) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ error: 'Forbidden: Unauthorized role' });
+        }
+        next();
+    };
 };

@@ -1,20 +1,21 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is a SQLite-compatible version of your schema
+// Enums are replaced with String + comments
+// Decimal is replaced with Float
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
-  password      String         // bcrypt hashed
-  role          Role           @default(CUSTOMER)
+  password      String         
+  role          String         @default("CUSTOMER") // Role enum: CUSTOMER, ADMIN
   name          String
   phone         String?
   loginAttempts Int            @default(0)
@@ -27,11 +28,8 @@ model User {
   otpExpiresAt  DateTime?
   orders        Order[]
   refreshTokens RefreshToken[]
-}
-
-enum Role {
-  CUSTOMER
-  ADMIN
+  supportTickets SupportTicket[]
+  reviews       Review[]
 }
 
 model RefreshToken {
@@ -50,13 +48,13 @@ model RefreshToken {
 model AuditLog {
   id           String   @id @default(uuid())
   userId       String?
-  action       String   // 'LOGIN', 'LOGOUT', 'CREATE_ORDER', etc.
-  resource     String   // 'User', 'Order', 'Product', etc.
+  action       String   
+  resource     String   
   resourceId   String?
   ipAddress    String
   userAgent    String
-  changes      String?  // JSON string of before/after data
-  status       String   // 'SUCCESS', 'FAILURE'
+  changes      String?  
+  status       String   
   errorMessage String?
   createdAt    DateTime @default(now())
   
@@ -65,37 +63,32 @@ model AuditLog {
   @@index([createdAt])
 }
 
-enum ReturnPolicy {
-  RETURNABLE
-  EXCHANGE_ONLY
-  NON_RETURNABLE
-}
-
 model Product {
   id           String       @id @default(uuid())
   name         String
   description  String
-  price        Decimal      @db.Decimal(10, 2)
-  images       String[]
+  price        Float        
+  images       String       // SQLite does not support String[]
   category     String
   stock        Int
-  sizes        String[]     @default([])
-  returnPolicy ReturnPolicy @default(RETURNABLE)
+  sizes        String       @default("") // SQLite does not support String[]
+  returnPolicy String       @default("RETURNABLE") // ReturnPolicy enum
   deliveryDays Int          @default(7)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   orderItems   OrderItem[]
+  reviews      Review[]
 }
 
 model Order {
   id            String      @id @default(uuid())
   orderNumber   String      @unique
   userId        String
-  user          User        @relation(fields: [userId], references: [id])
-  status        OrderStatus @default(PENDING)
-  total         Decimal     @db.Decimal(10, 2)
-  subtotal      Decimal     @db.Decimal(10, 2)
-  shipping      Decimal     @db.Decimal(10, 2)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status        String      @default("PENDING") // OrderStatus enum
+  total         Float       
+  subtotal      Float       
+  shipping      Float       
   paymentMethod String
   paymentStatus String      @default("pending")
   createdAt     DateTime    @default(now())
@@ -103,15 +96,7 @@ model Order {
   items         OrderItem[]
   shipment      Shipment?
   shippingAddress ShippingAddress?
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
+  supportTickets SupportTicket[]
 }
 
 model OrderItem {
@@ -119,9 +104,9 @@ model OrderItem {
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int
-  price     Decimal @db.Decimal(10, 2)
+  price     Float   
 }
 
 model ShippingAddress {
@@ -147,4 +132,69 @@ model Shipment {
   estimatedDate  DateTime
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model SupportTicket {
+  id          String       @id @default(uuid())
+  orderId     String?
+  order       Order?       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issueType   String
+  description String
+  status      String       @default("OPEN") // TicketStatus enum
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  closedAt    DateTime?
+  messages    SupportMessage[]
+
+  @@index([orderId])
+  @@index([userId])
+}
+
+model SupportMessage {
+  id          String       @id @default(uuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId    String
+  senderName  String
+  content     String
+  isAdmin     Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  @@index([ticketId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      // 1-5
+  comment   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId]) // Prevent multiple reviews for same product by one user
+  @@index([productId])
+  @@index([userId])
+}
+
+model BulkInquiry {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String
+  company     String?
+  productId   String?
+  productName String?
+  quantity    Int
+  message     String
+  type        String   @default("BULK_ORDER") // BULK_ORDER or CUSTOM_MANUFACTURING
+  status      String   @default("PENDING") // PENDING, CONTACTED, CLOSED
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+  @@index([email])
 }

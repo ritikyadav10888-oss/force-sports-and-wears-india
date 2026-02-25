@@ -110,11 +110,11 @@ export default function ProductsPage() {
                     <input
                         type="text"
                         placeholder="CATALOG SEARCH (SKU, NAME, TAGS)..."
-                        className="w-full bg-white/50 border border-border/30 rounded-xl px-12 py-4 text-xs font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-accent/50"
+                        className="w-full bg-secondary/50 text-foreground border border-border/30 rounded-xl px-12 py-4 text-xs font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-muted-foreground"
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-white border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted/50 transition-colors">
+                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-secondary text-foreground border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-accent/50 hover:text-accent transition-colors">
                         <Filter size={14} /> Category
                     </button>
                 </div>
@@ -194,7 +194,7 @@ export default function ProductsPage() {
                                                 <div className="grid grid-cols-2 gap-3 pt-2">
                                                     <button
                                                         onClick={() => handleEdit(product)}
-                                                        className="flex items-center justify-center gap-2 p-3 md:p-4 bg-white border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all"
+                                                        className="flex items-center justify-center gap-2 p-3 md:p-4 bg-secondary border border-border/50 text-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-accent hover:text-white hover:border-accent transition-all"
                                                     >
                                                         <Edit2 size={12} /> Edit
                                                     </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, ArrowLeft, Send } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,7 +8,7 @@ import Link from "next/link";
 import { api } from "@/lib/api-client";
 import { useAuth } from "@/store/useAuth";
 
-export default function VerifyOTPPage() {
+function VerifyOTPContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const email = searchParams.get("email");
@@ -96,20 +96,16 @@ export default function VerifyOTPPage() {
         try {
             const response = await api.verifyOtp(email!, otpString);
 
-            // Login success
-            setAuthLogin(
-                response.user.phone || '',
-                'IN',
-                '+91',
-                {
-                    firstName: response.user.name?.split(' ')[0] || '',
-                    lastName: response.user.name?.split(' ').slice(1).join(' ') || '',
-                    email: response.user.email,
-                    // Note: Address might be missing in verification response if not sent.
-                    // But usually user object has it if we fetched it.
-                    // Here we assume basic user info.
-                }
-            );
+            // Login success - pass full user object with id
+            setAuthLogin({
+                id: response.user.id,
+                phone: response.user.phone || '',
+                email: response.user.email,
+                name: response.user.name,
+                role: response.user.role,
+                firstName: response.user.name?.split(' ')[0] || '',
+                lastName: response.user.name?.split(' ').slice(1).join(' ') || '',
+            });
 
             // Force hard reload to ensure auth state is fresh
             window.location.href = '/account';
@@ -224,5 +220,17 @@ export default function VerifyOTPPage() {
                 </div>
             </motion.div>
         </div>
+    );
+}
+
+export default function VerifyOTPPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="animate-spin" size={24} />
+            </div>
+        }>
+            <VerifyOTPContent />
+        </Suspense>
     );
 }

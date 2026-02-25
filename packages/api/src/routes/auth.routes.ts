@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, logout, getMe, verifyOtp, resendOtp } from '../controllers/auth.controller';
+import { register, login, logout, getMe, verifyOtp, resendOtp, deleteAccount } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/authenticate';
 
 const router = Router();
@@ -10,5 +10,6 @@ router.post('/resend-otp', resendOtp);
 router.post('/login', login);
 router.post('/logout', logout);
 router.get('/me', authenticate, getMe);
+router.delete('/account', authenticate, deleteAccount);
 
 export default router;

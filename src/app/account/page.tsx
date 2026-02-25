@@ -90,6 +90,8 @@ export default function AccountPage() {
         setLoading(false);
     }, [isAuthenticated, router]);
 
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
     const handleLogout = async () => {
         try {
             await api.logout();
@@ -98,6 +100,27 @@ export default function AccountPage() {
         }
         logout();
         router.push('/');
+    };
+
+    const handleDeleteAccount = async () => {
+        const confirmed = window.confirm(
+            "ARE YOU ABSOLUTELY SURE?\n\nThis action is permanent and cannot be undone. All your orders, profile details, and data will be removed forever."
+        );
+
+        if (!confirmed) return;
+
+        setIsDeletingAccount(true);
+        try {
+            await api.deleteAccount();
+            logout();
+            router.push('/');
+            // Small notification could be added here, but the redirect is immediate
+        } catch (err: any) {
+            console.error("Delete account error:", err);
+            alert(err.message || "Failed to delete account. Please try again.");
+        } finally {
+            setIsDeletingAccount(false);
+        }
     };
 
     if (loading) {
@@ -374,8 +397,19 @@ export default function AccountPage() {
 
                                     <div className="pt-8 mt-8 border-t border-border/50">
                                         <h4 className="text-sm font-black uppercase tracking-widest text-red-500 mb-4">Danger Zone</h4>
-                                        <button className="px-6 py-3 border border-red-500/20 text-red-500 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-500/10 transition-colors">
-                                            Delete Account
+                                        <button
+                                            onClick={handleDeleteAccount}
+                                            disabled={isDeletingAccount}
+                                            className="px-6 py-3 border border-red-500/20 text-red-500 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-500/10 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                        >
+                                            {isDeletingAccount ? (
+                                                <>
+                                                    <Loader2 size={14} className="animate-spin" />
+                                                    Deleting...
+                                                </>
+                                            ) : (
+                                                "Delete Account"
+                                            )}
                                         </button>
                                     </div>
                                 </div>

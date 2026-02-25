@@ -25,18 +25,27 @@ export const useCart = create<CartState>()(
             isOpen: false,
             addItem: (product, quantity = 1) =>
                 set((state) => {
+                    // Block out-of-stock products entirely
+                    const stock = (product as any).stock;
+                    if (stock !== undefined && stock <= 0) return state;
+
                     const existingItem = state.items.find((item) => item.id === product.id);
                     if (existingItem) {
+                        // Cap quantity at available stock
+                        const newQty = stock !== undefined
+                            ? Math.min(stock, existingItem.quantity + quantity)
+                            : existingItem.quantity + quantity;
                         return {
                             items: state.items.map((item) =>
                                 item.id === product.id
-                                    ? { ...item, quantity: item.quantity + quantity }
+                                    ? { ...item, quantity: newQty }
                                     : item
                             ),
                             isOpen: true
                         };
                     }
-                    return { items: [...state.items, { ...product, quantity }], isOpen: true };
+                    const addQty = stock !== undefined ? Math.min(stock, quantity) : quantity;
+                    return { items: [...state.items, { ...product, quantity: addQty }], isOpen: true };
                 }),
             removeItem: (id) =>
                 set((state) => ({
@@ -44,11 +53,15 @@ export const useCart = create<CartState>()(
                 })),
             updateQuantity: (id, delta) =>
                 set((state) => ({
-                    items: state.items.map((item) =>
-                        item.id === id
-                            ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-                            : item
-                    ),
+                    items: state.items.map((item) => {
+                        if (item.id !== id) return item;
+                        const stock = (item as any).stock;
+                        const newQty = Math.max(1, item.quantity + delta);
+                        return {
+                            ...item,
+                            quantity: stock !== undefined ? Math.min(stock, newQty) : newQty
+                        };
+                    }),
                 })),
             toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
             clearCart: () => set({ items: [] }),

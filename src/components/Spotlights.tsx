@@ -1,13 +1,14 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const spotlights = [
     {
         title: "Pro Series '26",
         tag: "In Stock",
-        image: "https://images.unsplash.com/photo-1542291026-7eec264c274f?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2070&auto=format&fit=crop",
         description: "The next evolution of performance footwear. Engineered for the exceptional."
     },
     {
@@ -30,10 +31,12 @@ export const Spotlights = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {spotlights.map((item) => (
                         <div key={item.title} className="relative aspect-[16/9] rounded-[3rem] overflow-hidden group cursor-pointer border border-border/50">
-                            <img
+                            <Image
                                 src={item.image}
                                 alt={item.title}
-                                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                                fill
+                                className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                                sizes="(max-width: 768px) 100vw, 50vw"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                             <div className="absolute inset-0 p-12 flex flex-col justify-end gap-2">

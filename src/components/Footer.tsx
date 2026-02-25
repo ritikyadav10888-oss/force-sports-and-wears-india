@@ -23,6 +23,7 @@ export const Footer = () => {
                         <Link href="/" className="hover:text-accent transition-colors">Shop All</Link>
                         <Link href="/new" className="hover:text-accent transition-colors">Latest Drops</Link>
                         <Link href="/collections" className="hover:text-accent transition-colors">Collections</Link>
+                        <Link href="/bulk-order" className="hover:text-accent transition-colors">Bulk Orders</Link>
                         <Link href="/about" className="hover:text-accent transition-colors">Our Story</Link>
                     </div>
                 </div>
@@ -30,6 +31,7 @@ export const Footer = () => {
                     <h4 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">Support</h4>
                     <div className="flex flex-col gap-4 text-sm font-bold text-muted-foreground">
                         <Link href="/contact" className="hover:text-accent transition-colors">Contact Expert</Link>
+                        <Link href="/bulk-order" className="hover:text-accent transition-colors">Custom Manufacturing</Link>
                         <Link href="/shipping" className="hover:text-accent transition-colors">Order Tracking</Link>
                         <Link href="/returns" className="hover:text-accent transition-colors">Returns & Exchanges</Link>
                         <Link href="/size-guide" className="hover:text-accent transition-colors">Size Guide</Link>
@@ -38,8 +40,8 @@ export const Footer = () => {
                 <div className="space-y-6">
                     <h4 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">Connect</h4>
                     <div className="flex flex-col gap-4 text-sm font-bold text-muted-foreground">
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Instagram</a>
-                        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Twitter (X)</a>
+                        <a href="https://www.instagram.com/forcesports_india/" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Instagram</a>
+                        <a href="https://facebook.com/forcesportsindia" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Facebook</a>
                         <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">Discord Community</a>
                         <Link href="/announcements" className="hover:text-accent transition-colors">Newsletter</Link>
                     </div>

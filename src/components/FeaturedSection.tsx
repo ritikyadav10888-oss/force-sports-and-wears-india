@@ -6,30 +6,22 @@ import { ProductCard } from "./ProductCard";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { api } from "@/lib/api-client";
 
-export const FeaturedSection = () => {
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchFeatured = async () => {
-            try {
-                const data = await api.getProducts();
-                setProducts(data.products || []);
-            } catch (error) {
-                console.error("Failed to fetch featured gear", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchFeatured();
-    }, []);
+interface FeaturedSectionProps {
+    products?: any[];
+}
+
+export const FeaturedSection = ({ products = [] }: FeaturedSectionProps) => {
+    // Determine loading state based on if products are passed or empty?
+    // Actually, if we pass products from server, there's no loading state.
+    // We can simplify.
 
     const featuredProducts = products.length > 0
         ? [...products].sort((a, b) => (a.category?.toLowerCase() === 'cricket' ? -1 : 1)).slice(0, 4)
         : [];
 
     return (
-        <section className="py-32 px-6">
+        <section className="py-24 sm:py-32 px-4 sm:px-6">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
                     <div className="space-y-4">
@@ -43,7 +35,7 @@ export const FeaturedSection = () => {
                         <motion.h2
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none"
+                            className="text-4xl md:text-7xl font-black italic tracking-tighter uppercase leading-none"
                         >
                             Featured <br /> Gear
                         </motion.h2>
@@ -53,12 +45,8 @@ export const FeaturedSection = () => {
                     </button>
                 </div>
 
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4">
-                        <Loader2 className="animate-spin text-accent" size={40} />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Syncing Weaponry...</p>
-                    </div>
-                ) : featuredProducts.length === 0 ? (
+
+                {featuredProducts.length === 0 ? (
                     <div className="py-20 text-center border border-dashed border-border rounded-3xl">
                         <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Arsenal currently empty. Check back for fresh drops.</p>
                     </div>

@@ -1,0 +1,66 @@
+steps:
+  # Build Storefront
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-storefront'
+      - '-f'
+      - 'Dockerfile.storefront'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL'
+      - '.'
+    id: 'storefront-build'
+
+  # Build Admin
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
+      - '-f'
+      - 'packages/admin/Dockerfile'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL'
+      - '.'
+    id: 'admin-build'
+
+  # Deploy Storefront
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'force-storefront'
+      - '--image'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-storefront'
+      - '--region'
+      - 'asia-south1'
+      - '--allow-unauthenticated'
+    id: 'storefront-deploy'
+    waitFor: ['storefront-build']
+
+  # Deploy Admin
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'force-admin'
+      - '--image'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
+      - '--region'
+      - 'asia-south1'
+      - '--allow-unauthenticated'
+    id: 'admin-deploy'
+    waitFor: ['admin-build']
+
+images:
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-storefront'
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/force-repo/force-admin'
+
+substitutions:
+  _NEXT_PUBLIC_API_URL: 'https://force-api-735064695486.asia-south1.run.app'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

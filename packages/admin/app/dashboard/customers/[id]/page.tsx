@@ -95,6 +95,25 @@ export default function CustomerDetailsPage() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="md:ml-auto">
+                        <button
+                            onClick={async () => {
+                                if (window.confirm("ARE YOU SURE?\nThis will permanently delete this resident and all their historical data.")) {
+                                    try {
+                                        await adminAPI.deleteCustomer(customer.id);
+                                        router.push('/dashboard/customers');
+                                        router.refresh();
+                                    } catch (err: any) {
+                                        alert(err.message || 'Failed to delete customer');
+                                    }
+                                }
+                            }}
+                            className="px-8 py-4 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                            Exile Resident (Delete)
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -172,9 +191,9 @@ export default function CustomerDetailsPage() {
                                         </td>
                                         <td className="px-8 py-5">
                                             <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${order.status === 'DELIVERED' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                                    order.status === 'SHIPPED' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                        order.status === 'CANCELLED' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                            'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
+                                                order.status === 'SHIPPED' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                                    order.status === 'CANCELLED' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                        'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'
                                                 }`}>
                                                 {order.status}
                                             </span>

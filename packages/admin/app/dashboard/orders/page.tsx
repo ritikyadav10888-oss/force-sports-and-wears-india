@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShoppingBag, Search, Filter, Download, Plus, MoreHorizontal, Eye, Clock, Loader2 } from 'lucide-react';
 import { adminAPI } from '@/lib/admin-api-client';
 
@@ -14,6 +15,7 @@ const statusColors: any = {
 };
 
 export default function OrdersPage() {
+    const router = useRouter();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -56,7 +58,7 @@ export default function OrdersPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-6 py-4 bg-white border border-border/50 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-lg transition-all">
+                    <button className="flex items-center gap-2 px-6 py-4 bg-secondary text-foreground border border-border/50 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-lg hover:border-accent/50 transition-all">
                         <Download size={14} /> Export CSV
                     </button>
                     <button className="flex items-center gap-2 px-6 py-4 bg-accent text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:shadow-2xl hover:shadow-accent/30 transition-all hover:scale-105">
@@ -72,11 +74,11 @@ export default function OrdersPage() {
                     <input
                         type="text"
                         placeholder="SEARCH ORDERS (ID, CUSTOMER, EMAIL)..."
-                        className="w-full bg-white/50 border border-border/30 rounded-xl px-12 py-4 text-xs font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-accent/50"
+                        className="w-full bg-secondary/50 text-foreground border border-border/30 rounded-xl px-12 py-4 text-xs font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-accent/50 placeholder:text-muted-foreground"
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-white border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted/50 transition-colors">
+                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-secondary text-foreground border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-accent/50 hover:text-accent transition-colors">
                         <Filter size={14} /> Filter
                     </button>
                 </div>
@@ -111,7 +113,11 @@ export default function OrdersPage() {
                                 </tr>
                             ) : (
                                 orders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-accent/5 transition-all group">
+                                    <tr
+                                        key={order.id}
+                                        onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+                                        className="hover:bg-accent/5 transition-all group cursor-pointer"
+                                    >
                                         <td className="px-10 py-7">
                                             <span className="font-black text-sm tracking-tight group-hover:text-accent transition-colors">{order.orderNumber}</span>
                                         </td>
@@ -135,10 +141,21 @@ export default function OrdersPage() {
                                         </td>
                                         <td className="px-10 py-7">
                                             <div className="flex items-center gap-2">
-                                                <button className="p-3 bg-white border border-border/50 rounded-xl hover:bg-accent hover:text-white hover:border-accent transition-all">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.push(`/dashboard/orders/${order.id}`);
+                                                    }}
+                                                    className="p-3 bg-secondary text-foreground border border-border/50 rounded-xl hover:bg-accent hover:text-white hover:border-accent transition-all"
+                                                    title="View Order"
+                                                >
                                                     <Eye size={16} />
                                                 </button>
-                                                <button className="p-3 bg-white border border-border/50 rounded-xl hover:bg-muted transition-all">
+                                                <button
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="p-3 bg-secondary text-foreground border border-border/50 rounded-xl hover:bg-muted hover:border-accent/50 transition-all"
+                                                    title="More Options"
+                                                >
                                                     <MoreHorizontal size={16} />
                                                 </button>
                                             </div>

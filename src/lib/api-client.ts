@@ -39,8 +39,10 @@ class APIClient {
         });
 
         if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.error || 'Registration failed');
+            const error = await res.json().catch(() => ({}));
+            const errorMessage = error.error || error.message || 'Registration failed';
+            const details = error.details ? ` Details: ${error.details}` : '';
+            throw new Error(`${errorMessage}${details} [${res.status}]`);
         }
 
         const response = await res.json();
@@ -65,8 +67,10 @@ class APIClient {
         });
 
         if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.error || 'Verification failed');
+            const error = await res.json().catch(() => ({}));
+            const errorMessage = error.error || error.message || 'Verification failed';
+            const details = error.details ? ` Details: ${error.details}` : '';
+            throw new Error(`${errorMessage}${details} [${res.status}]`);
         }
 
         const response = await res.json();
@@ -87,8 +91,10 @@ class APIClient {
         });
 
         if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.error || 'Failed to resend OTP');
+            const error = await res.json().catch(() => ({}));
+            const errorMessage = error.error || error.message || 'Failed to resend OTP';
+            const details = error.details ? ` Details: ${error.details}` : '';
+            throw new Error(`${errorMessage}${details} [${res.status}]`);
         }
 
         return res.json();
@@ -103,8 +109,10 @@ class APIClient {
         });
 
         if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.error || 'Login failed');
+            const error = await res.json().catch(() => ({}));
+            const errorMessage = error.error || error.message || 'Login failed';
+            const details = error.details ? ` Details: ${error.details}` : '';
+            throw new Error(`${errorMessage}${details} [${res.status}]`);
         }
 
         const response = await res.json();
@@ -136,6 +144,23 @@ class APIClient {
 
         if (!res.ok) throw new Error('Not authenticated');
         return res.json();
+    }
+
+    async deleteAccount(): Promise<void> {
+        const res = await fetch(`${API_URL}/api/auth/account`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+            credentials: 'include',
+        });
+
+        if (!res.ok) {
+            const error = await res.json().catch(() => ({}));
+            throw new Error(error.error || 'Failed to delete account');
+        }
+
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+        }
     }
 
     // Products (Public)
@@ -204,6 +229,111 @@ class APIClient {
         });
 
         if (!res.ok) throw new Error('Failed to create payment intent');
+        return res.json();
+    }
+
+    // Support
+    async submitSupportTicket(data: { orderId?: string, issueType: string, description: string }) {
+        const res = await fetch(`${API_URL}/api/support`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            credentials: 'include',
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to submit support ticket');
+        }
+
+        return res.json();
+    }
+
+    // Reviews
+    async getProductReviews(productId: string) {
+        const res = await fetch(`${API_URL}/api/reviews/products/${productId}`, {
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        return res.json();
+    }
+
+    async submitReview(data: { productId: string, rating: number, comment: string }) {
+        const res = await fetch(`${API_URL}/api/reviews`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            credentials: 'include',
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to submit review');
+        }
+
+        return res.json();
+    }
+
+    async updateReview(id: string, data: { rating: number, comment: string }) {
+        const res = await fetch(`${API_URL}/api/reviews/${id}`, {
+            method: 'PUT',
+            headers: this.getHeaders(),
+            credentials: 'include',
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to update review');
+        }
+
+        return res.json();
+    }
+
+    async deleteReview(id: string) {
+        const res = await fetch(`${API_URL}/api/reviews/${id}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+            credentials: 'include',
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to delete review');
+        }
+
+        return res.json();
+    }
+
+    // Support Messages
+    async getSupportMessages(ticketId: string) {
+        const res = await fetch(`${API_URL}/api/support/${ticketId}/messages`, {
+            headers: this.getHeaders(),
+            credentials: 'include',
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || error.message || 'Failed to fetch messages');
+        }
+
+        return res.json();
+    }
+
+    async sendSupportMessage(ticketId: string, content: string) {
+        const res = await fetch(`${API_URL}/api/support/${ticketId}/messages`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({ content }),
+        });
+
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || 'Failed to send message');
+        }
+
         return res.json();
     }
 }

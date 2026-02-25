@@ -1,42 +1,78 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { api } from "@/lib/api-client";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { Metadata } from 'next';
 
-export default function CategoryPage() {
-    const params = useParams();
-    const categoryName = decodeURIComponent(params.category as string);
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+type Props = {
+    params: Promise<{ category: string }>;
+};
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const data = await api.getProducts();
-                const allProducts = data.products || [];
-                const filtered = allProducts.filter((p: any) =>
-                    p.category?.toLowerCase() === categoryName.toLowerCase()
-                );
-                setProducts(filtered);
-            } catch (error) {
-                console.error("Failed to fetch products", error);
-            } finally {
-                setLoading(false);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { category } = await params;
+    const categoryName = decodeURIComponent(category);
+
+    return {
+        title: `${categoryName} Collection | Force Sports`,
+        description: `Shop the exclusive ${categoryName} collection at Force Sports India. High-performance gear designed for excellence.`,
+        openGraph: {
+            title: `${categoryName} | Force Sports`,
+            description: `Discover the ${categoryName} range. Premium quality, elite performance.`,
+        }
+    };
+}
+
+export default async function CategoryPage({ params }: Props) {
+    const { category } = await params;
+    const categoryName = decodeURIComponent(category);
+
+    let products: any[] = [];
+    try {
+        const data = await api.getProducts();
+        const allProducts = data.products || [];
+        products = allProducts.filter((p: any) =>
+            p.category?.toLowerCase() === categoryName.toLowerCase()
+        );
+    } catch (error) {
+        console.error("Failed to fetch products", error);
+    }
+
+    // Breadcrumb JSON-LD
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://forcesports.in'
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Collections',
+                item: 'https://forcesports.in/collections'
+            },
+            {
+                '@type': 'ListItem',
+                position: 3,
+                name: categoryName,
+                item: `https://forcesports.in/collections/${category}`
             }
-        };
-        fetchProducts();
-    }, [categoryName]);
+        ]
+    };
 
     return (
         <main className="min-h-screen pt-32 pb-24 px-6">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <div className="max-w-7xl mx-auto">
-                <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-accent mb-8 transition-colors">
-                    <ArrowLeft size={16} /> Back to Base
+                <Link href="/collections" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-accent mb-8 transition-colors">
+                    <ArrowLeft size={16} /> Back to Collections
                 </Link>
 
                 <div className="mb-16">
@@ -44,22 +80,10 @@ export default function CategoryPage() {
                     <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">{categoryName}</h1>
                 </div>
 
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-4">
-                        <Loader2 className="animate-spin text-accent" size={40} />
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Loading Gear...</p>
-                    </div>
-                ) : products.length > 0 ? (
+                {products.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {products.map((p, idx) => (
-                            <motion.div
-                                key={p.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                            >
-                                <ProductCard product={p} />
-                            </motion.div>
+                            <ProductCard key={p.id} product={p} />
                         ))}
                     </div>
                 ) : (

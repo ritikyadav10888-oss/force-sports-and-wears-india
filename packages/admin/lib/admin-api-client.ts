@@ -41,7 +41,9 @@ class AdminAPIClient {
 
         if (!res.ok) {
             const error = await res.json().catch(() => ({}));
-            throw new Error(error.error || error.message || 'API Request Failed');
+            const errorMessage = error.error || error.message || 'API Request Failed';
+            const details = error.details ? ` Details: ${error.details}` : '';
+            throw new Error(`${errorMessage}${details} [${res.status}] at ${url}`);
         }
 
         return res.json();
@@ -81,6 +83,12 @@ class AdminAPIClient {
 
     async getCustomer(id: string) {
         return this.request(`/api/customers/${id}`);
+    }
+
+    async deleteCustomer(id: string) {
+        return this.request(`/api/customers/${id}`, {
+            method: 'DELETE',
+        });
     }
 
     // Orders
@@ -185,6 +193,44 @@ class AdminAPIClient {
             throw new Error(error.error || 'Failed to upload image');
         }
         return res.json();
+    }
+
+    // Support
+    async getSupportTickets() {
+        return this.request('/api/support/all');
+    }
+
+    async updateTicketStatus(id: string, status: string) {
+        return this.request(`/api/support/${id}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status }),
+        });
+    }
+
+    async getSupportMessages(id: string) {
+        return this.request(`/api/support/${id}/messages`);
+    }
+
+    async sendSupportMessage(id: string, content: string) {
+        return this.request(`/api/support/${id}/messages`, {
+            method: 'POST',
+            body: JSON.stringify({ content }),
+        });
+    }
+
+    // Reviews
+    async getReviews() {
+        return this.request('/api/reviews/all');
+    }
+
+    async deleteReview(id: string) {
+        return this.request(`/api/reviews/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async getReviewSummaries() {
+        return this.request('/api/reviews/summaries');
     }
 }
 

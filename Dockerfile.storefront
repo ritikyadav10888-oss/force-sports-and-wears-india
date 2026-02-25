@@ -7,14 +7,11 @@ WORKDIR /app
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install dependencies (ignoring workspaces since we are building root only)
-RUN npm install --legacy-peer-deps
-
-# Copy source code
+# Copy source code FIRST to ensure workspace packages exist for npm install
 COPY . .
+
+# Install dependencies (only for root, ignoring workspaces)
+RUN npm install --legacy-peer-deps --no-workspaces
 
 # Build the Next.js application
 RUN npm run build
@@ -27,15 +24,16 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Copy necessary files from builder
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 # Expose port
 EXPOSE 3000
 
-# Start application
-CMD ["npm", "start"]
+# Start application (using standalone mode)
+CMD ["node", "server.js"]

@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS "User" (
     role TEXT NOT NULL DEFAULT 'CUSTOMER',
     name TEXT NOT NULL,
     phone TEXT,
+    "isVerified" BOOLEAN NOT NULL DEFAULT FALSE,
+    "otp" TEXT,
+    "otpExpiresAt" TIMESTAMP,
     "loginAttempts" INTEGER NOT NULL DEFAULT 0,
     "lockoutUntil" TIMESTAMP,
     "lastLoginAt" TIMESTAMP,
@@ -53,6 +56,9 @@ CREATE TABLE IF NOT EXISTS "Product" (
     stock INTEGER NOT NULL DEFAULT 0,
     category TEXT NOT NULL,
     images TEXT[] NOT NULL DEFAULT '{}',
+    "sizes" TEXT DEFAULT '',
+    "returnPolicy" TEXT DEFAULT 'RETURNABLE',
+    "deliveryDays" INTEGER DEFAULT 7,
     "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW()
 );

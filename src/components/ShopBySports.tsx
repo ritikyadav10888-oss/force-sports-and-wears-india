@@ -6,12 +6,11 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 const sports = [
-    { name: "Cricket", image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=2067&auto=format&fit=crop" },
     { name: "Badminton", image: "https://images.unsplash.com/photo-1521537634581-0dced2fee2ef?q=80&w=2000&auto=format&fit=crop" },
     { name: "Running", image: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=2000&auto=format&fit=crop" },
-    { name: "Pickleball", image: "https://placehold.co/800x1200/101010/FFFFFF/png?text=Pickleball" },
+    { name: "Cricket", image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=2067&auto=format&fit=crop" },
     { name: "Football", image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2036&auto=format&fit=crop" },
-    { name: "Training", image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" }
+    { name: "Pickleball", image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?q=80&w=2070&auto=format&fit=crop" },
 ];
 
 export const ShopBySports = () => {
@@ -23,7 +22,7 @@ export const ShopBySports = () => {
                     <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-none">Shop By <br className="md:hidden" /> Sports</h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                     {sports.map((sport) => (
                         <Link href={`/collections/${encodeURIComponent(sport.name)}`} key={sport.name} className="block w-full">
                             <motion.div

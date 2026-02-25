@@ -8,7 +8,10 @@ import productRoutes from './routes/product.routes';
 import orderRoutes from './routes/order.routes';
 import customerRoutes from './routes/customer.routes';
 import shipmentRoutes from './routes/shipment.routes';
-import uploadRoutes from './routes/upload'; // Import upload routes
+import supportRoutes from './routes/support.routes';
+import reviewRoutes from './routes/review.routes';
+import bulkInquiryRoutes from './routes/bulk-inquiry.routes';
+import uploadRoutes from './routes/upload';
 import { errorHandler } from './middleware/errorHandler';
 import { generalLimiter, authLimiter, adminLimiter } from './middleware/rateLimiter';
 import { validateApiSecret } from './middleware/apiSecret';
@@ -41,6 +44,13 @@ app.use('/api/', generalLimiter);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/bulk-inquiry', bulkInquiryRoutes);
+
+app.get('/api/debug-support', (req, res) => {
+    res.json({ message: 'Debug route is working', timestamp: new Date().toISOString() });
+});
 
 // Admin routes: Require API secret + higher rate limit
 app.use('/api/customers', validateApiSecret, adminLimiter, customerRoutes);
@@ -58,6 +68,28 @@ app.get('/health', (req, res) => {
         environment: process.env.NODE_ENV,
         timestamp: new Date().toISOString()
     });
+});
+
+// Database health check
+app.get('/health/db', async (req, res) => {
+    try {
+        // Import prisma dynamically or use global if available
+        const prisma = (await import('./config/database')).default;
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({
+            status: 'ok',
+            database: 'connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Database health check failed:', error);
+        res.status(500).json({
+            status: 'error',
+            database: 'disconnected',
+            error: String(error),
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // Security check endpoint

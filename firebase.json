@@ -53,6 +53,24 @@
                     }
                 }
             ]
+        },
+        {
+            "site": "force-sports-and-wears-india",
+            "public": "public",
+            "ignore": [
+                "firebase.json",
+                "**/.*",
+                "**/node_modules/**"
+            ],
+            "rewrites": [
+                {
+                    "source": "**",
+                    "run": {
+                        "serviceId": "force-storefront",
+                        "region": "asia-south1"
+                    }
+                }
+            ]
         }
     ]
 }

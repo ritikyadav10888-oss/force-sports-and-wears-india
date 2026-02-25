@@ -120,35 +120,59 @@ export const QuickView = ({ product, isOpen, onClose }: QuickViewProps) => {
                                     </div>
                                 </div>
 
+                                {/* Stock Status */}
+                                {(product as any).stock <= 0 ? (
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-xl">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Out of Stock</span>
+                                    </div>
+                                ) : (product as any).stock <= 5 ? (
+                                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-xl">
+                                        <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-500">Only {(product as any).stock} left</span>
+                                    </div>
+                                ) : null}
+
                                 <div className="space-y-4 flex items-center gap-6">
                                     <div>
                                         <h4 className="text-[10px] font-black uppercase tracking-[.2em] text-muted-foreground mb-3">Quantity</h4>
                                         <div className="flex items-center w-fit bg-secondary rounded-xl p-1 border border-border/50">
                                             <button
                                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                                className="w-10 h-10 flex items-center justify-center hover:text-accent transition-all"
+                                                disabled={(product as any).stock <= 0}
+                                                className="w-10 h-10 flex items-center justify-center hover:text-accent transition-all disabled:opacity-30"
                                             >
                                                 <Minus size={16} />
                                             </button>
                                             <span className="w-10 text-center font-black italic">{quantity}</span>
                                             <button
-                                                onClick={() => setQuantity(quantity + 1)}
-                                                className="w-10 h-10 flex items-center justify-center hover:text-accent transition-all"
+                                                onClick={() => setQuantity(Math.min((product as any).stock || 99, quantity + 1))}
+                                                disabled={(product as any).stock <= 0 || quantity >= ((product as any).stock || 99)}
+                                                className="w-10 h-10 flex items-center justify-center hover:text-accent transition-all disabled:opacity-30"
                                             >
                                                 <Plus size={16} />
                                             </button>
                                         </div>
                                     </div>
                                     <div className="flex-1 pt-6">
-                                        <button
-                                            onClick={() => {
-                                                addItem(product, quantity);
-                                                onClose();
-                                            }}
-                                            className="w-full py-5 bg-primary text-primary-foreground rounded-[2rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-lg active:scale-[0.98]"
-                                        >
-                                            Add to Bag <ShoppingBag size={20} />
-                                        </button>
+                                        {(product as any).stock <= 0 ? (
+                                            <button
+                                                disabled
+                                                className="w-full py-5 bg-muted text-muted-foreground rounded-[2rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 cursor-not-allowed opacity-60"
+                                            >
+                                                Out of Stock
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => {
+                                                    addItem(product, quantity);
+                                                    onClose();
+                                                }}
+                                                className="w-full py-5 bg-primary text-primary-foreground rounded-[2rem] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-lg active:scale-[0.98]"
+                                            >
+                                                Add to Bag <ShoppingBag size={20} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
