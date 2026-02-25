@@ -5,7 +5,9 @@ WORKDIR /app
 
 # Build arguments for admin
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_API_SECRET
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_SECRET=$NEXT_PUBLIC_API_SECRET
 
 # Copy root package.json for workspace definition if needed
 COPY package.json package-lock.json ./

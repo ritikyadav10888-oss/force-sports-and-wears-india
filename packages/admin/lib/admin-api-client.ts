@@ -31,12 +31,16 @@ class AdminAPIClient {
             credentials: 'include',
         });
 
-        if (res.status === 401 || res.status === 403) {
+        if (res.status === 401) {
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('admin_token');
                 window.location.href = '/login';
             }
             throw new Error('Authentication failed');
+        }
+
+        if (res.status === 403) {
+            throw new Error('Access denied: You do not have permission to perform this action.');
         }
 
         if (!res.ok) {
@@ -180,12 +184,16 @@ class AdminAPIClient {
             body: formData,
         });
 
-        if (res.status === 401 || res.status === 403) {
+        if (res.status === 401) {
             if (typeof window !== 'undefined') {
                 localStorage.removeItem('admin_token');
                 window.location.href = '/login';
             }
             throw new Error('Authentication failed');
+        }
+
+        if (res.status === 403) {
+            throw new Error('Access denied: You do not have permission to perform this action.');
         }
 
         if (!res.ok) {
