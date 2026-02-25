@@ -95,12 +95,21 @@ app.get('/health/db', async (req, res) => {
 // Security check endpoint
 // Restart trigger
 app.get('/api/security-check', (req, res) => {
+    // Restrict to internal/localhost access only
+    const clientIp = req.ip || req.socket.remoteAddress;
+    const isInternal = clientIp === '127.0.0.1' || clientIp === '::1' || clientIp === '::ffff:127.0.0.1';
+
+    if (!isInternal && process.env.NODE_ENV === 'production') {
+        return res.status(403).json({ error: 'Access denied: Internal access only' });
+    }
+
     res.json({
         apiSecretConfigured: !!process.env.API_SECRET,
         jwtSecretConfigured: !!process.env.JWT_SECRET,
         encryptionKeyConfigured: !!process.env.ENCRYPTION_KEY,
         stripeConfigured: !!process.env.STRIPE_SECRET_KEY,
         corsOrigins: process.env.CORS_ORIGINS?.split(',').length || 0,
+        clientIp // Useful for debugging internal access
     });
 });
 

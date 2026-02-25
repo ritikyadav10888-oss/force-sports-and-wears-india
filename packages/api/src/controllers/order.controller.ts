@@ -66,13 +66,15 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ error: 'User not authenticated' });
         }
 
-        // Use a transaction to validate stock and create order atomically
+        // Step 1 & 2: Validate stock, fetch real prices and create order
         const order = await prisma.$transaction(async (tx: any) => {
-            // Step 1: Validate and lock stock for all items
+            let calculatedSubtotal = 0;
+            const orderItems = [];
+
             for (const item of data.items) {
                 const product = await tx.product.findUnique({
                     where: { id: item.productId },
-                    select: { id: true, name: true, stock: true }
+                    select: { id: true, name: true, stock: true, price: true }
                 });
 
                 if (!product) {
@@ -86,27 +88,42 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
                 if (product.stock < item.quantity) {
                     throw new Error(`"${product.name}" only has ${product.stock} unit(s) available`);
                 }
+
+                const itemPrice = Number(product.price);
+                calculatedSubtotal += itemPrice * item.quantity;
+
+                orderItems.push({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    price: itemPrice
+                });
+
+                // Decrement stock
+                await tx.product.update({
+                    where: { id: item.productId },
+                    data: { stock: { decrement: item.quantity } }
+                });
             }
 
-            // Step 2: Generate order number
-            const orderNumber = `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+            // Step 3: Calculate totals (using server-side logic)
+            // Note: In a real app, shipping would also be calculated server-side based on address
+            const shipping = data.shipping;
+            const total = calculatedSubtotal + shipping;
 
-            // Step 3: Create the order
+            const orderNumber = `ORD-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            // Step 4: Create the order
             const newOrder = await tx.order.create({
                 data: {
                     orderNumber,
                     userId,
                     status: 'PENDING',
-                    subtotal: data.subtotal,
-                    shipping: data.shipping,
-                    total: data.total,
+                    subtotal: calculatedSubtotal,
+                    shipping,
+                    total,
                     paymentMethod: data.paymentMethod,
                     items: {
-                        create: data.items.map(item => ({
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price
-                        }))
+                        create: orderItems
                     },
                     shippingAddress: {
                         create: data.shippingAddress
@@ -119,14 +136,6 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
                     shippingAddress: true
                 }
             });
-
-            // Step 4: Decrement stock for each ordered item
-            for (const item of data.items) {
-                await tx.product.update({
-                    where: { id: item.productId },
-                    data: { stock: { decrement: item.quantity } }
-                });
-            }
 
             return newOrder;
         });

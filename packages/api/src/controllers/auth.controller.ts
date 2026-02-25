@@ -35,10 +35,17 @@ try {
 
 // Hardcoded Admin Credentials
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@force.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
+
+if (process.env.NODE_ENV === 'production' && (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)) {
+    console.warn('⚠️  CRITICAL SECURITY WARNING: Using default admin credentials in production. Set ADMIN_EMAIL and ADMIN_PASSWORD env vars!');
+}
+
 const HARDCODED_ADMIN = {
     id: 'hardcoded-admin-id',
-    email: 'admin@force.com',
-    password: 'Admin@123', // In a real app, this should be a hash
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
     name: 'Admin User',
     role: 'ADMIN' as 'ADMIN' | 'CUSTOMER',
     phone: '+1 111 222 3333'
@@ -100,8 +107,7 @@ export const register = async (req: AuthRequest, res: Response) => {
                 name: user.name,
                 role: user.role,
                 isVerified: false,
-                phone: user.phone,
-                otp: process.env.NODE_ENV === 'development' ? otp : undefined // For testing convenience
+                phone: user.phone
             }
         });
     } catch (error: any) {
@@ -377,11 +383,7 @@ export const resendOtp = async (req: AuthRequest, res: Response) => {
         console.log(`[OTP Resend] Generated for ${email}: ${otp}`);
 
         res.json({
-            message: 'OTP resent successfully',
-            user: {
-                // Return OTP in development mode for convenience
-                otp: process.env.NODE_ENV === 'development' ? otp : undefined
-            }
+            message: 'OTP resent successfully'
         });
 
     } catch (error) {
